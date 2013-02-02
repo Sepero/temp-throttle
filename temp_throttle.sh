@@ -23,7 +23,9 @@ echo -e "Number of CPU cores detected: $CORES\n"
 MAX_TEMP=${MAX_TEMP}000
 LOW_TEMP=${LOW_TEMP}000
 
+# FREQ_LIST is a list (array) of all available cpu frequencies the system allows.
 declare -a FREQ_LIST=($(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies))
+# CURRENT_FREQ relates to the FREQ_LIST by keeping record of the currently set frequency.
 let CURRENT_FREQ=1
 
 function set_freq {
