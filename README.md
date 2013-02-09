@@ -6,7 +6,7 @@ A shell script for throttling system CPU frequency based on a desired maximum te
 Set a desired maximum temperature for your system using this script. If the maximum tempurature is exeeded, the script will limit the speed of your CPU cores incrementally until the system is again below your desired maximum temperature. (If your system remains above maximum temperature after completely limiting your CPU cores, it will simply stay limited until temperatures drop below the maximum desired.)
 
 
-This script must be run with root priviledges. Only celcius temperatures are supported. This example will limit system temperatures to 80 Celcius:
+This script must be run with root priviledges. Only Celsius temperatures are supported. This example will limit system temperatures to 80 Celsius:
 
     sudo ./temp_throttle 80
 
