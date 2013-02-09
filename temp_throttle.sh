@@ -1,12 +1,12 @@
 #!/bin/bash
 # temp_throttle.sh max_temp
 
-# USE CELCIUS TEMPERATURES.
+# USE CELSIUS TEMPERATURES.
 
 if [ $# -ne 1 ]; then
-	# If tempurature wasn't given, then print a message and exit.
-	echo "Please supply a maximum desired temperature in Celcius." 1>&2
-	echo "For example:  temp_throttle.sh 60" 1>&2
+	# If temperature wasn't given, then print a message and exit.
+	echo "Please supply a maximum desired temperature in Celsius." 1>&2
+	echo "For example:  ${0} 60" 1>&2
 	exit 2
 else
 	#Set the first argument as the maximum desired temperature.
