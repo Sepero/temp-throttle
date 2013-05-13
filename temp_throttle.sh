@@ -6,10 +6,10 @@
 # http://github.com/Sepero/temp-throttle/
 # http://seperohacker.blogspot.com/2012/10/linux-keep-your-cpu-cool-with-frequency.html
 
+# License: GNU GPL 2.0
+
 # Usage: temp_throttle.sh max_temp
 # USE CELSIUS TEMPERATURES.
-
-# License: GNU GPL 2.0
 
 if [ $# -ne 1 ]; then
 	# If temperature wasn't given, then print a message and exit.
