@@ -1,19 +1,31 @@
 #!/bin/bash
 
-# Authors: Sepero (sepero 111 @ gmail . com)
+# Usage: temp_throttle.sh max_temp
+# USE CELCIUS TEMPERATURES.
 
-# Links
+cat << EOF
+Author: Sepero (sepero 111 @ gmail . com)
+ Remote Python developer and Linux administrator for hire.
+URL: http://github.com/Sepero/temp-throttle/
+
+EOF
+
+# Additional Links
 # http://github.com/Sepero/temp-throttle/
 # http://seperohacker.blogspot.com/2012/10/linux-keep-your-cpu-cool-with-frequency.html
 
 # License: GNU GPL 2.0
 
-# Usage: temp_throttle.sh max_temp
-# USE CELSIUS TEMPERATURES.
+# Generic  function for printing an error and exiting.
+function err_exit () {
+	echo ""
+	echo "Error: $@" 1>&2
+	exit 128
+}
 
 if [ $# -ne 1 ]; then
 	# If temperature wasn't given, then print a message and exit.
-	echo "Please supply a maximum desired temperature in Celsius." 1>&2
+	echo "Please supply a maximum desired temperature in Celcius." 1>&2
 	echo "For example:  ${0} 60" 1>&2
 	exit 2
 else
@@ -31,11 +43,13 @@ echo -e "Number of CPU cores detected: $CORES\n"
 MAX_TEMP=${MAX_TEMP}000
 LOW_TEMP=${LOW_TEMP}000
 
-# FREQ_LIST is a list (array) of all available cpu frequencies the system allows.
-declare -a FREQ_LIST=($(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies))
-# CURRENT_FREQ relates to the FREQ_LIST by keeping record of the currently set frequency.
-let CURRENT_FREQ=1
+FREQ_FILE="/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies"
+# FREQ_LIST is an array of available frequencies.
+declare -a FREQ_LIST=($(cat $FREQ_FILE)) || err_exit "Could not determine available cpu frequencies. Missing file: $FREQ_FILE"
+# CURRENT_FREQ will save the index of the currently used frequency in FREQ_LIST.
+CURRENT_FREQ=1
 
+# Set the maximum frequency for all cpu cores.
 function set_freq {
 	echo ${FREQ_LIST[$1]}
 	for((i=0;i<$CORES;i++)); do
@@ -43,6 +57,7 @@ function set_freq {
 	done
 }
 
+# Will reduce the frequency of cpus if possible.
 function throttle {
 	if [ $CURRENT_FREQ -ne $((${#FREQ_LIST[@]}-1)) ]; then
 		let CURRENT_FREQ+=1
@@ -51,6 +66,7 @@ function throttle {
 	fi
 }
 
+# Will increase the frequency of cpus if possible.
 function unthrottle {
 	if [ $CURRENT_FREQ -ne 0 ]; then
 		let CURRENT_FREQ-=1
@@ -68,6 +84,7 @@ function get_temp {
 	#TEMP=$(cat /sys/class/hwmon/hwmon1/device/temp1_input)
 }
 
+# Mainloop
 while true; do
 	get_temp
 	if   [ $TEMP -gt $MAX_TEMP ]; then # Throttle if too hot.
