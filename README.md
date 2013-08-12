@@ -11,11 +11,12 @@ This script must be run with root or sudo privileges. Only Celsius temperatures 
     sudo ./temp_throttle 80
 
 
-For more information and a bit friendly instructions, see here:  
+For more instructions, see here:  
 http://seperohacker.blogspot.com/2012/10/linux-keep-your-cpu-cool-with-frequency.html
 
 
-Authors: Sepero (sepero 111 @ gmail . com)
+Author: Sepero (sepero 111 @ gmail . com)  
+ Remote Python developer and Linux administrator for hire.
 
 Links: http://github.com/Sepero/temp-throttle/  
 Links: http://seperohacker.blogspot.com/2012/10/linux-keep-your-cpu-cool-with-frequency.html  
