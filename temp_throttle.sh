@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Usage: temp_throttle.sh max_temp
-# USE CELCIUS TEMPERATURES.
+# USE CELSIUS TEMPERATURES.
 
 cat << EOF
 Author: Sepero (sepero 111 @ gmail . com)
@@ -14,6 +14,9 @@ EOF
 # http://github.com/Sepero/temp-throttle/
 # http://seperohacker.blogspot.com/2012/10/linux-keep-your-cpu-cool-with-frequency.html
 
+# Additional Credits
+# Wolfgang Ocker <weo AT weo1 DOT de> - Patch for unspecified cpu frequencies.
+
 # License: GNU GPL 2.0
 
 # Generic  function for printing an error and exiting.
@@ -25,7 +28,7 @@ function err_exit () {
 
 if [ $# -ne 1 ]; then
 	# If temperature wasn't given, then print a message and exit.
-	echo "Please supply a maximum desired temperature in Celcius." 1>&2
+	echo "Please supply a maximum desired temperature in Celsius." 1>&2
 	echo "For example:  ${0} 60" 1>&2
 	exit 2
 else
@@ -44,8 +47,20 @@ MAX_TEMP=${MAX_TEMP}000
 LOW_TEMP=${LOW_TEMP}000
 
 FREQ_FILE="/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies"
-# FREQ_LIST is an array of available frequencies.
-declare -a FREQ_LIST=($(cat $FREQ_FILE)) || err_exit "Could not determine available cpu frequencies. Missing file: $FREQ_FILE"
+FREQ_MIN="/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_min_freq"
+FREQ_MAX="/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq"
+
+# Store an array of the available cpu frequencies in FREQ_LIST.
+if [ -f $FREQ_FILE ]; then
+	# If $FREQ_FILE exists, get frequencies from it.
+	declare -a FREQ_LIST=($(cat $FREQ_FILE)) || err_exit "Could not read available cpu frequencies from file $FREQ_FILE"
+elif [ -f $FREQ_MIN -a -f $FREQ_MAX ]; then
+	# Else if $FREQ_MIN and $FREQ_MAX exist, generate a list of frequencies between them.
+	declare -a FREQ_LIST=($(seq $(cat $FREQ_MAX) -100000 $(cat $FREQ_MIN))) || err_exit "Could not compute available cpu frequencies"
+else
+	err_exit "Could not determine available cpu frequencies"
+fi
+
 # CURRENT_FREQ will save the index of the currently used frequency in FREQ_LIST.
 CURRENT_FREQ=1
 
@@ -80,7 +95,7 @@ function get_temp {
 	# If one of these doesn't work, the try uncommenting another.
 	
 	TEMP=$(cat /sys/class/thermal/thermal_zone0/temp)
-	#TEMP=$(cat /sys/class/hwmon/hwmon0/temp1_input) 
+	#TEMP=$(cat /sys/class/hwmon/hwmon0/temp1_input)
 	#TEMP=$(cat /sys/class/hwmon/hwmon1/device/temp1_input)
 }
 
