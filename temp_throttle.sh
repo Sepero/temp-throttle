@@ -2,9 +2,10 @@
 
 # Usage: temp_throttle.sh max_temp
 # USE CELSIUS TEMPERATURES.
+# version 2.00
 
 cat << EOF
-Author: Sepero (sepero 111 @ gmail . com)
+Author: Sepero 2013 (sepero 111 @ gmail . com)
  Remote Python developer and Linux administrator for hire.
 URL: http://github.com/Sepero/temp-throttle/
 
@@ -20,7 +21,7 @@ EOF
 # License: GNU GPL 2.0
 
 # Generic  function for printing an error and exiting.
-function err_exit () {
+err_exit () {
 	echo ""
 	echo "Error: $@" 1>&2
 	exit 128
@@ -36,11 +37,15 @@ else
 	MAX_TEMP=$1
 fi
 
+
+### Start Initialize Global variables.
+
 # The frequency will increase when low temperature is reached.
-let LOW_TEMP=$MAX_TEMP-5
+LOW_TEMP=$(($MAX_TEMP - 5))
 
 CORES=$(nproc) # Get number of CPU cores.
 echo -e "Number of CPU cores detected: $CORES\n"
+CORES=$(($CORES - 1)) # Subtract 1 from $CORES for easier counting later.
 
 # Temperatures internally are calculated to the thousandth.
 MAX_TEMP=${MAX_TEMP}000
@@ -53,44 +58,50 @@ FREQ_MAX="/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq"
 # Store an array of the available cpu frequencies in FREQ_LIST.
 if [ -f $FREQ_FILE ]; then
 	# If $FREQ_FILE exists, get frequencies from it.
-	declare -a FREQ_LIST=($(cat $FREQ_FILE)) || err_exit "Could not read available cpu frequencies from file $FREQ_FILE"
+	FREQ_LIST=$(cat $FREQ_FILE) || err_exit "Could not read available cpu frequencies from file $FREQ_FILE"
 elif [ -f $FREQ_MIN -a -f $FREQ_MAX ]; then
 	# Else if $FREQ_MIN and $FREQ_MAX exist, generate a list of frequencies between them.
-	declare -a FREQ_LIST=($(seq $(cat $FREQ_MAX) -100000 $(cat $FREQ_MIN))) || err_exit "Could not compute available cpu frequencies"
+	FREQ_LIST=$(seq $(cat $FREQ_MAX) -100000 $(cat $FREQ_MIN)) || err_exit "Could not compute available cpu frequencies"
 else
 	err_exit "Could not determine available cpu frequencies"
 fi
 
+FREQ_LIST_LEN=$(echo $FREQ_LIST | wc -w)
+
 # CURRENT_FREQ will save the index of the currently used frequency in FREQ_LIST.
-CURRENT_FREQ=1
+CURRENT_FREQ=2
+
+### End Initialize Global variables.
+
 
 # Set the maximum frequency for all cpu cores.
-function set_freq {
-	echo ${FREQ_LIST[$1]}
-	for((i=0;i<$CORES;i++)); do
-		echo ${FREQ_LIST[$1]} > /sys/devices/system/cpu/cpu$i/cpufreq/scaling_max_freq
+set_freq () {
+	FREQ_TO_SET=$(echo $FREQ_LIST | cut -d " " -f $CURRENT_FREQ)
+	echo $FREQ_TO_SET
+	for i in $(seq 0 $CORES); do
+		echo $FREQ_TO_SET > /sys/devices/system/cpu/cpu$i/cpufreq/scaling_max_freq
 	done
 }
 
 # Will reduce the frequency of cpus if possible.
-function throttle {
-	if [ $CURRENT_FREQ -ne $((${#FREQ_LIST[@]}-1)) ]; then
-		let CURRENT_FREQ+=1
+throttle () {
+	if [ $CURRENT_FREQ -lt $FREQ_LIST_LEN ]; then
+		CURRENT_FREQ=$(($CURRENT_FREQ + 1))
 		echo -n "throttle "
 		set_freq $CURRENT_FREQ
 	fi
 }
 
 # Will increase the frequency of cpus if possible.
-function unthrottle {
-	if [ $CURRENT_FREQ -ne 0 ]; then
-		let CURRENT_FREQ-=1
+unthrottle () {
+	if [ $CURRENT_FREQ -ne 1 ]; then
+		CURRENT_FREQ=$(($CURRENT_FREQ - 1))
 		echo -n "unthrottle "
 		set_freq $CURRENT_FREQ
 	fi
 }
 
-function get_temp {
+get_temp () {
 	# Get the system temperature.
 	# If one of these doesn't work, the try uncommenting another.
 	
