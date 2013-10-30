@@ -5,7 +5,7 @@
 # version 2.00
 
 cat << EOF
-Author: Sepero 2013 (sepero 111 @ gmail . com)
+Author: Sepero 2013 (sepero 111 @ gmx . com)
  Remote Python developer and Linux administrator for hire.
 URL: http://github.com/Sepero/temp-throttle/
 
