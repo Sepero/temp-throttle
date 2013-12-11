@@ -2,7 +2,7 @@
 
 # Usage: temp_throttle.sh max_temp
 # USE CELSIUS TEMPERATURES.
-# version 2.01
+# version 2.10
 
 cat << EOF
 Author: Sepero 2013 (sepero 111 @ gmx . com)
@@ -12,7 +12,6 @@ URL: http://github.com/Sepero/temp-throttle/
 EOF
 
 # Additional Links
-# http://github.com/Sepero/temp-throttle/
 # http://seperohacker.blogspot.com/2012/10/linux-keep-your-cpu-cool-with-frequency.html
 
 # Additional Credits
@@ -71,6 +70,30 @@ FREQ_LIST_LEN=$(echo $FREQ_LIST | wc -w)
 # CURRENT_FREQ will save the index of the currently used frequency in FREQ_LIST.
 CURRENT_FREQ=2
 
+# This is a list of possible locations to read the current system temperature.
+TEMPERATURE_FILES="
+/sys/class/thermal/thermal_zone0/temp
+/sys/class/thermal/thermal_zone1/temp
+/sys/class/thermal/thermal_zone2/temp
+/sys/class/hwmon/hwmon0/temp1_input
+/sys/class/hwmon/hwmon1/temp1_input
+/sys/class/hwmon/hwmon2/temp1_input
+/sys/class/hwmon/hwmon0/device/temp1_input
+/sys/class/hwmon/hwmon1/device/temp1_input
+/sys/class/hwmon/hwmon2/device/temp1_input
+null
+"
+
+# Store the first temperature location that exists in the variable TEMP_FILE.
+# The location stored in $TEMP_FILE will be used for temperature readings.
+for file in $TEMPERATURE_FILES; do
+	TEMP_FILE=$file
+	[ -f $TEMP_FILE ] && break
+done
+
+[ $TEMP_FILE == "null" ] && err_exit "The location for temperature reading was not found."
+
+
 ### End Initialize Global variables.
 
 
@@ -103,12 +126,8 @@ unthrottle () {
 
 get_temp () {
 	# Get the system temperature.
-	# If one of these doesn't work, the try uncommenting another.
 	
-	TEMP=$(cat /sys/class/thermal/thermal_zone0/temp)
-	#TEMP=$(cat /sys/class/hwmon/hwmon0/temp1_input)
-	#TEMP=$(cat /sys/class/hwmon/hwmon1/temp1_input)
-	#TEMP=$(cat /sys/class/hwmon/hwmon1/device/temp1_input)
+	TEMP=$(cat $TEMP_FILE)
 }
 
 # Mainloop

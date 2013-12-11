@@ -23,5 +23,5 @@ Links: http://seperohacker.blogspot.com/2012/10/linux-keep-your-cpu-cool-with-fr
 
 License: GNU GPL 2.0
 
-Usage: temp_throttle.sh max_temp
-USE CELSIUS TEMPERATURES.
+Usage: `temp_throttle.sh max_temp`  
+USE CELSIUS TEMPERATURES
