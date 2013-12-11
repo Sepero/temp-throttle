@@ -2,7 +2,7 @@
 
 # Usage: temp_throttle.sh max_temp
 # USE CELSIUS TEMPERATURES.
-# version 2.00
+# version 2.01
 
 cat << EOF
 Author: Sepero 2013 (sepero 111 @ gmx . com)
@@ -107,6 +107,7 @@ get_temp () {
 	
 	TEMP=$(cat /sys/class/thermal/thermal_zone0/temp)
 	#TEMP=$(cat /sys/class/hwmon/hwmon0/temp1_input)
+	#TEMP=$(cat /sys/class/hwmon/hwmon1/temp1_input)
 	#TEMP=$(cat /sys/class/hwmon/hwmon1/device/temp1_input)
 }
 
