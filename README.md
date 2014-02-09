@@ -16,7 +16,6 @@ http://seperohacker.blogspot.com/2012/10/linux-keep-your-cpu-cool-with-frequency
 
 
 Author: Sepero (sepero 111 @ gmx . com)
- Remote Python developer and Linux administrator for hire.
 
 Links: http://github.com/Sepero/temp-throttle/  
 Links: http://seperohacker.blogspot.com/2012/10/linux-keep-your-cpu-cool-with-frequency.html  
