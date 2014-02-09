@@ -2,11 +2,10 @@
 
 # Usage: temp_throttle.sh max_temp
 # USE CELSIUS TEMPERATURES.
-# version 2.10
+# version 2.11
 
 cat << EOF
 Author: Sepero 2013 (sepero 111 @ gmx . com)
- Remote Python developer and Linux administrator for hire.
 URL: http://github.com/Sepero/temp-throttle/
 
 EOF
@@ -40,11 +39,11 @@ fi
 ### Start Initialize Global variables.
 
 # The frequency will increase when low temperature is reached.
-LOW_TEMP=$(($MAX_TEMP - 5))
+LOW_TEMP=$((MAX_TEMP - 5))
 
 CORES=$(nproc) # Get number of CPU cores.
 echo -e "Number of CPU cores detected: $CORES\n"
-CORES=$(($CORES - 1)) # Subtract 1 from $CORES for easier counting later.
+CORES=$((CORES - 1)) # Subtract 1 from $CORES for easier counting later.
 
 # Temperatures internally are calculated to the thousandth.
 MAX_TEMP=${MAX_TEMP}000
@@ -109,7 +108,7 @@ set_freq () {
 # Will reduce the frequency of cpus if possible.
 throttle () {
 	if [ $CURRENT_FREQ -lt $FREQ_LIST_LEN ]; then
-		CURRENT_FREQ=$(($CURRENT_FREQ + 1))
+		CURRENT_FREQ=$((CURRENT_FREQ + 1))
 		echo -n "throttle "
 		set_freq $CURRENT_FREQ
 	fi
@@ -118,7 +117,7 @@ throttle () {
 # Will increase the frequency of cpus if possible.
 unthrottle () {
 	if [ $CURRENT_FREQ -ne 1 ]; then
-		CURRENT_FREQ=$(($CURRENT_FREQ - 1))
+		CURRENT_FREQ=$((CURRENT_FREQ - 1))
 		echo -n "unthrottle "
 		set_freq $CURRENT_FREQ
 	fi
