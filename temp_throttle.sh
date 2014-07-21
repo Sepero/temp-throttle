@@ -36,7 +36,7 @@ else
 fi
 
 
-### Start Initialize Global variables.
+### START Initialize Global variables.
 
 # The frequency will increase when low temperature is reached.
 LOW_TEMP=$((MAX_TEMP - 5))
@@ -53,7 +53,7 @@ FREQ_FILE="/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies"
 FREQ_MIN="/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_min_freq"
 FREQ_MAX="/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq"
 
-# Store an array of the available cpu frequencies in FREQ_LIST.
+# Store available cpu frequencies in a space separated string FREQ_LIST.
 if [ -f $FREQ_FILE ]; then
 	# If $FREQ_FILE exists, get frequencies from it.
 	FREQ_LIST=$(cat $FREQ_FILE) || err_exit "Could not read available cpu frequencies from file $FREQ_FILE"
@@ -93,11 +93,14 @@ done
 [ $TEMP_FILE == "null" ] && err_exit "The location for temperature reading was not found."
 
 
-### End Initialize Global variables.
+### END Initialize Global variables.
 
+
+### START define script functions.
 
 # Set the maximum frequency for all cpu cores.
 set_freq () {
+	# From the string FREQ_LIST, we choose the item at index CURRENT_FREQ.
 	FREQ_TO_SET=$(echo $FREQ_LIST | cut -d " " -f $CURRENT_FREQ)
 	echo $FREQ_TO_SET
 	for i in $(seq 0 $CORES); do
@@ -129,13 +132,16 @@ get_temp () {
 	TEMP=$(cat $TEMP_FILE)
 }
 
+### END define script functions.
+
+
 # Mainloop
 while true; do
-	get_temp
+	get_temp # Gets the current tempurature and set it to the variable TEMP.
 	if   [ $TEMP -gt $MAX_TEMP ]; then # Throttle if too hot.
 		throttle
 	elif [ $TEMP -le $LOW_TEMP ]; then # Unthrottle if cool.
 		unthrottle
 	fi
-	sleep 3
+	sleep 3 # The amount of time between checking tempuratures.
 done
