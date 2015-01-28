@@ -14,6 +14,15 @@ This script must be run with root or sudo privileges. Only Celsius temperatures 
 For more instructions, see here:  
 http://seperohacker.blogspot.com/2012/10/linux-keep-your-cpu-cool-with-frequency.html
 
+## Warning!
+For normal working please add lines below to /etc/rc.local **before** "exit 0":
+
+    for I in $(find /sys/devices/system/cpu/ -maxdepth 1 -name 'cpu?' | sed 's_/sys/devices/system/cpu/cpu__g')
+    do
+	    cpufreq-set -c $I --min 800000
+    done
+
+
 
 Author: Sepero (sepero 111 @ gmx . com)
 
