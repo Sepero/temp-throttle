@@ -2,7 +2,7 @@
 
 # Usage: temp_throttle.sh max_temp
 # USE CELSIUS TEMPERATURES.
-# version 2.11
+# version 2.20
 
 cat << EOF
 Author: Sepero 2013 (sepero 111 @ gmx . com)
@@ -104,7 +104,12 @@ set_freq () {
 	FREQ_TO_SET=$(echo $FREQ_LIST | cut -d " " -f $CURRENT_FREQ)
 	echo $FREQ_TO_SET
 	for i in $(seq 0 $CORES); do
-		echo $FREQ_TO_SET > /sys/devices/system/cpu/cpu$i/cpufreq/scaling_max_freq
+		# Try to set core frequency by writing to /sys/devices.
+		{ echo $FREQ_TO_SET 2> /dev/null > /sys/devices/system/cpu/cpu$i/cpufreq/scaling_max_freq; } ||
+		# Else, try to set core frequency using command cpufreq-set.
+		{ cpufreq-set -c $i --max $FREQ_TO_SET > /dev/null; } ||
+		# Else, return error message.
+		{ err_exit "Failed to set frequency CPU core$i. Run script as Root user. Some systems may require to install the package cpufrequtils."; }
 	done
 }
 
