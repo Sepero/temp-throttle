@@ -104,7 +104,13 @@ set_freq () {
 	FREQ_TO_SET=$(echo $FREQ_LIST | cut -d " " -f $CURRENT_FREQ)
 	echo $FREQ_TO_SET
 	for i in $(seq 0 $CORES); do
-		echo $FREQ_TO_SET > /sys/devices/system/cpu/cpu$i/cpufreq/scaling_max_freq
+		{
+			echo $FREQ_TO_SET > /sys/devices/system/cpu/cpu$i/cpufreq/scaling_max_freq
+		} || {
+			cpufreq-set -c $i --max $FREQ_TO_SET
+		} || {
+			echo "Try installing cpufrequtils"
+		}
 	done
 }
 
