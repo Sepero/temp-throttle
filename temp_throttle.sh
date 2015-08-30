@@ -56,7 +56,7 @@ FREQ_MAX="/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq"
 # Store available cpu frequencies in a space separated string FREQ_LIST.
 if [ -f $FREQ_FILE ]; then
 	# If $FREQ_FILE exists, get frequencies from it.
-	FREQ_LIST=$(cat $FREQ_FILE) || err_exit "Could not read available cpu frequencies from file $FREQ_FILE"
+	FREQ_LIST=$(cat $FREQ_FILE | tr ' ' '\n' | sort -rn | tr '\n' ' ') || err_exit "Could not read available cpu frequencies from file $FREQ_FILE"
 elif [ -f $FREQ_MIN -a -f $FREQ_MAX ]; then
 	# Else if $FREQ_MIN and $FREQ_MAX exist, generate a list of frequencies between them.
 	FREQ_LIST=$(seq $(cat $FREQ_MAX) -100000 $(cat $FREQ_MIN)) || err_exit "Could not compute available cpu frequencies"
