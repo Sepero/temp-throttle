@@ -25,7 +25,7 @@ err_exit () {
 # Function for parsing the configuration file.
 simple_parse ()
 {
-	
+	true
 }
 
 # Get desired maximum temperature.
