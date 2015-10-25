@@ -22,6 +22,13 @@ err_exit () {
 	exit 128
 }
 
+# Function for parsing the configuration file.
+simple_parse ()
+{
+	
+}
+
+# Get desired maximum temperature.
 if [ $# -ne 1 ]; then
 	# If temperature wasn't given, then print a message and exit.
 	echo "Please supply a maximum desired temperature in Celsius." 1>&2
