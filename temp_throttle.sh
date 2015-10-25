@@ -5,7 +5,7 @@
 # version 2.20
 
 cat << EOF
-Author: Sepero 2013 (sepero 111 @ gmx . com)
+Author: Sepero 2016 (sepero 111 @ gmx . com)
 URL: http://github.com/Sepero/temp-throttle/
 
 EOF
@@ -140,13 +140,13 @@ get_temp () {
 ### END define script functions.
 
 
-# Mainloop
+# Main loop
 while true; do
-	get_temp # Gets the current tempurature and set it to the variable TEMP.
+	get_temp # Gets the current temperature and set it to the variable TEMP.
 	if   [ $TEMP -gt $MAX_TEMP ]; then # Throttle if too hot.
 		throttle
 	elif [ $TEMP -le $LOW_TEMP ]; then # Unthrottle if cool.
 		unthrottle
 	fi
-	sleep 3 # The amount of time between checking tempuratures.
+	sleep 3 # The amount of time between checking temperatures.
 done
