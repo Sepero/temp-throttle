@@ -139,6 +139,9 @@ get_temp () {
 
 ### END define script functions.
 
+echo "Initialize to max CPU frequency"
+unthrottle
+
 
 # Main loop
 while true; do
