@@ -2,7 +2,7 @@
 
 # Usage: temp_throttle.sh max_temp
 # USE CELSIUS TEMPERATURES.
-# version 2.20
+# version 2.21
 
 cat << EOF
 Author: Sepero 2016 (sepero 111 @ gmx . com)
@@ -12,11 +12,6 @@ EOF
 
 # Additional Links
 # http://seperohacker.blogspot.com/2012/10/linux-keep-your-cpu-cool-with-frequency.html
-
-# Additional Credits
-# Wolfgang Ocker <weo AT weo1 DOT de> - Patch for unspecified cpu frequencies.
-# Neraste - ARM Architecture patch for backwards reported frequencies.
-
 
 # License: GNU GPL 2.0
 
