@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Usage: temp_throttle.sh max_temp
+# Usage: temp-throttle.sh max_temp
 # USE CELSIUS TEMPERATURES.
-# version 2.21
+# version 2.22
 
 cat << EOF
 Author: Sepero 2016 (sepero 111 @ gmx . com)
@@ -15,29 +15,61 @@ EOF
 
 # License: GNU GPL 2.0
 
+# set -x
+
 # Generic  function for printing an error and exiting.
 err_exit () {
 	echo ""
-	echo "Error: $@" 1>&2
+	echo -e "Error: $@" 1>&2
 	exit 128
 }
+
+### START Get configuration arguments.
 
 # Function for parsing the configuration file.
 simple_parse ()
 {
-	true
+	CONFIG="$(echo "$CONFIG"    |
+		sed 's/[\#;].*$//'       |
+		xargs                   |
+		sed 's/[ \t]*=[ \t]*/=/')"
+	#CONFIG="$(echo "$CONFIG"    |
+		#sed 's/[#;].*$//'       |  # Strip comments.
+		#xargs                   |  # Trim whitespace.
+		#sed '[ \t]*=[ \t]*//')"    # Remove whitespace around "="
+
+	# Get value for MAX_TEMP.
+	MAX_TEMP="$(echo "$CONFIG" | sed -n 's/max_temp=//ip')"
 }
 
 # Get desired maximum temperature.
-if [ $# -ne 1 ]; then
-	# If temperature wasn't given, then print a message and exit.
-	echo "Please supply a maximum desired temperature in Celsius." 1>&2
-	echo "For example:  ${0} 60" 1>&2
-	exit 2
-else
-	#Set the first argument as the maximum desired temperature.
-	MAX_TEMP=$1
+MAX_TEMP=""
+#CONFIG_FILE="/etc/temp-throttle.conf"
+CONFIG_FILE="/home/a/programming/bash/temp-throttle/etc/temp-throttle.conf"
+if [ -f "$CONFIG_FILE" ]; then
+	echo "Configuration file found"
+	CONFIG="$(cat $CONFIG_FILE)"
+	simple_parse
+else # If no configuration file, else get command line arguments.
+	while getopts ":l" OPT; do
+		case "$OPT" in
+			l) MAX_TEMP="$OPTARG";;
+			*) ;;
+		esac
+		shift
+	done
+	[ $# -gt 0 ] && MAX_TEMP="$1"
 fi
+
+# If temperature wasn't given, then print a message and exit.
+[ "$MAX_TEMP" != "" ] ||
+err_exit "Please supply a maximum desired temperature in Celsius.\nFor example:  ${0} 60"
+
+# Verify temperature is an integer.
+[[ "$MAX_TEMP" =~ ^-?[0-9]+$ ]] ||
+err_exit "Maximum temperature $MAX_TEMP must be an integer."
+
+### END Get configuration arguments.
 
 
 ### START Initialize Global variables.
