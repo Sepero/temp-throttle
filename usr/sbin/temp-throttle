@@ -44,8 +44,7 @@ simple_parse ()
 
 # Get desired maximum temperature.
 MAX_TEMP=""
-#CONFIG_FILE="/etc/temp-throttle.conf"
-CONFIG_FILE="/home/a/programming/bash/temp-throttle/etc/temp-throttle.conf"
+CONFIG_FILE="/etc/temp-throttle.conf"
 if [ -f "$CONFIG_FILE" ]; then
 	echo "Configuration file found"
 	CONFIG="$(cat $CONFIG_FILE)"
