@@ -55,11 +55,11 @@ while getopts ":l" OPT; do
 	shift
 done
 [ $# -gt 0 ] && MAX_TEMP="$1"
-echo $MAX_TEMP
 
 # If max temperature wasn't found, then print a message and exit.
 [ "$MAX_TEMP" != "" ] ||
 err_exit "Please supply a maximum desired temperature in Celsius.\nFor example:  ${0} 60"
+echo "Maximum temperature set to: ${MAX_TEMP}C"
 
 # Verify temperature is an integer.
 [[ "$MAX_TEMP" =~ ^-?[0-9]+$ ]] ||
