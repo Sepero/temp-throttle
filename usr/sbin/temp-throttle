@@ -2,7 +2,7 @@
 
 # Usage: temp-throttle.sh max_temp
 # USE CELSIUS TEMPERATURES.
-# version 2.22
+# version 2.23
 
 cat << EOF
 Author: Sepero 2016 (sepero 111 @ gmx . com)
