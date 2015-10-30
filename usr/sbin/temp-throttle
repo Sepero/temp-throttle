@@ -29,31 +29,25 @@ err_exit () {
 # Function for parsing the configuration file.
 simple_parse ()
 {
-	CONFIG="$(echo "$CONFIG"    |
-		sed 's/[\#;].*$//'       |
-		xargs                   |
-		sed 's/[ \t]*=[ \t]*/=/')"
-	#CONFIG="$(echo "$CONFIG"    |
-		#sed 's/[#;].*$//'       |  # Strip comments.
-		#xargs                   |  # Trim whitespace.
-		#sed '[ \t]*=[ \t]*//')"    # Remove whitespace around "="
+	CONFIG="$(cat $CONFIG_FILE   |
+		sed 's/[#;].*$//'        |  # Strip comments.
+		xargs                    |  # Trim whitespace.
+		sed 's/[ \t]*=[ \t]*/=/')"  # Remove whitespace around "="
 
 	# Get value for MAX_TEMP.
 	MAX_TEMP="$(echo "$CONFIG" | sed -n 's/max_temp=//ip')"
 }
 
-# Get desired maximum temperature.
+# Initialize configuration variables.
 MAX_TEMP=""
 LOG_FILE=""
 CONFIG_FILE="/etc/temp-throttle.conf"
-if [ -f "$CONFIG_FILE" ]; then  # Read configuration file.
-	echo "Configuration file found"
-	CONFIG="$(cat $CONFIG_FILE)"
-	simple_parse
-fi
+
+# Read configuration file if it exists.
+[ -f "$CONFIG_FILE" ] && simple_parse
 
 # Get command line arguments.
-while getopt ":l" OPT; do
+while getopts ":l" OPT; do
 	case "$OPT" in
 		l) MAX_TEMP="$OPTARG";;
 		*) ;;
@@ -61,8 +55,9 @@ while getopt ":l" OPT; do
 	shift
 done
 [ $# -gt 0 ] && MAX_TEMP="$1"
+echo $MAX_TEMP
 
-# If temperature wasn't given, then print a message and exit.
+# If max temperature wasn't found, then print a message and exit.
 [ "$MAX_TEMP" != "" ] ||
 err_exit "Please supply a maximum desired temperature in Celsius.\nFor example:  ${0} 60"
 
