@@ -53,7 +53,7 @@ if [ -f "$CONFIG_FILE" ]; then  # Read configuration file.
 fi
 
 # Get command line arguments.
-while getopts ":l" OPT; do
+while getopt ":l" OPT; do
 	case "$OPT" in
 		l) MAX_TEMP="$OPTARG";;
 		*) ;;
