@@ -44,21 +44,23 @@ simple_parse ()
 
 # Get desired maximum temperature.
 MAX_TEMP=""
+LOG_FILE=""
 CONFIG_FILE="/etc/temp-throttle.conf"
-if [ -f "$CONFIG_FILE" ]; then
+if [ -f "$CONFIG_FILE" ]; then  # Read configuration file.
 	echo "Configuration file found"
 	CONFIG="$(cat $CONFIG_FILE)"
 	simple_parse
-else # If no configuration file, else get command line arguments.
-	while getopts ":l" OPT; do
-		case "$OPT" in
-			l) MAX_TEMP="$OPTARG";;
-			*) ;;
-		esac
-		shift
-	done
-	[ $# -gt 0 ] && MAX_TEMP="$1"
 fi
+
+# Get command line arguments.
+while getopts ":l" OPT; do
+	case "$OPT" in
+		l) MAX_TEMP="$OPTARG";;
+		*) ;;
+	esac
+	shift
+done
+[ $# -gt 0 ] && MAX_TEMP="$1"
 
 # If temperature wasn't given, then print a message and exit.
 [ "$MAX_TEMP" != "" ] ||
