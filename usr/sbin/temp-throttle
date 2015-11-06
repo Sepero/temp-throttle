@@ -1,8 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Usage: temp-throttle.sh max_temp
 # USE CELSIUS TEMPERATURES.
-# version 2.23
+# version 2.30
 
 cat << EOF
 Author: Sepero 2016 (sepero 111 @ gmx . com)
@@ -32,7 +32,7 @@ simple_parse ()
 	CONFIG="$(cat $CONFIG_FILE   |
 		sed 's/[#;].*$//'        |  # Strip comments.
 		xargs                    |  # Trim whitespace.
-		sed 's/[ \t]*=[ \t]*/=/')"  # Remove whitespace around "="
+		sed 's/\s*=\s*/=/')"  # Remove whitespace around "="
 
 	# Get value for MAX_TEMP.
 	MAX_TEMP="$(echo "$CONFIG" | sed -n 's/max_temp=//ip')"
@@ -102,6 +102,7 @@ FREQ_LIST_LEN=$(echo $FREQ_LIST | wc -w)
 CURRENT_FREQ=2
 
 # This is a list of possible locations to read the current system temperature.
+# We use the first file found.
 TEMPERATURE_FILES="
 /sys/class/thermal/thermal_zone0/temp
 /sys/class/thermal/thermal_zone1/temp
