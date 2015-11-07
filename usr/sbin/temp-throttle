@@ -26,25 +26,13 @@ err_exit () {
 
 ### START Get configuration arguments.
 
-# Function for parsing the configuration file.
-simple_parse ()
-{
-	CONFIG="$(cat $CONFIG_FILE   |
-		sed 's/[#;].*$//'        |  # Strip comments.
-		xargs                    |  # Trim whitespace.
-		sed 's/\s*=\s*/=/')"  # Remove whitespace around "="
-
-	# Get value for MAX_TEMP.
-	MAX_TEMP="$(echo "$CONFIG" | sed -n 's/max_temp=//ip')"
-}
-
 # Initialize configuration variables.
 MAX_TEMP=""
 LOG_FILE=""
 CONFIG_FILE="/etc/temp-throttle.conf"
 
 # Read configuration file if it exists.
-[ -f "$CONFIG_FILE" ] && simple_parse
+[ -f "$CONFIG_FILE" ] && . "$CONFIG_FILE"
 
 # Get command line arguments.
 while getopts ":l" OPT; do
