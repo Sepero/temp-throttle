@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-# Usage: temp-throttle.sh max_temp
+# Usage: temp-throttle max_temp
 # USE CELSIUS TEMPERATURES.
-# version 2.30
+# version 2.40
 
 cat << EOF
 Author: Sepero 2016 (sepero 111 @ gmx . com)
@@ -27,8 +27,7 @@ err_exit () {
 ### START Get configuration arguments.
 
 # Function for parsing the configuration file.
-simple_parse ()
-{
+simple_parse () {
 	CONFIG="$(cat $CONFIG_FILE   |
 		sed 's/[#;].*$//'        |  # Strip comments.
 		xargs                    |  # Trim whitespace.
@@ -98,7 +97,7 @@ fi
 
 FREQ_LIST_LEN=$(echo $FREQ_LIST | wc -w)
 
-# CURRENT_FREQ will save the index of the currently used frequency in FREQ_LIST.
+# CURRENT_FREQ will keep the index of the currently used frequency in FREQ_LIST.
 CURRENT_FREQ=2
 
 # This is a list of possible locations to read the current system temperature.
@@ -167,13 +166,19 @@ unthrottle () {
 	fi
 }
 
+# Get the system temperature.
 get_temp () {
-	# Get the system temperature.
-	
 	TEMP=$(cat $TEMP_FILE)
 }
 
+# Try to return everything to normal before exiting.
+exit_function () {
+	true
+}
+
 ### END define script functions.
+
+trap exit_function EXIT SIGINT SIGTERM
 
 echo "Initialize to max CPU frequency"
 unthrottle
