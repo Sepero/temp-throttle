@@ -49,7 +49,7 @@ CONFIG_FILE="/etc/temp-throttle.conf"
 # Get command line arguments.
 while getopts ":l" OPT; do
 	case "$OPT" in
-		l) MAX_TEMP="$OPTARG";;
+		l) LOG_FILE="$OPTARG";;
 		*) ;;
 	esac
 	shift
