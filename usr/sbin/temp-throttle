@@ -125,7 +125,7 @@ for file in $TEMPERATURE_FILES; do
 	[ -f $TEMP_FILE ] && break
 done
 
-[ $TEMP_FILE == "null" ] && err_exit "The location for temperature reading was not found."
+[ $TEMP_FILE == "null" ] && err_exit "The location for temperature reading was not found.\nPlease reference bug #7: https://github.com/Sepero/temp-throttle/issues/7"
 
 
 ### END Initialize Global variables.
