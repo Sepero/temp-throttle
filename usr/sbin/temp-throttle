@@ -112,9 +112,9 @@ TEMPERATURE_FILES="
 /sys/class/hwmon/hwmon0/device/temp1_input
 /sys/class/hwmon/hwmon1/device/temp1_input
 /sys/class/hwmon/hwmon2/device/temp1_input
-/sys/class/hwmon/hwmon0/hwmon0/temp0
-/sys/class/hwmon/hwmon0/hwmon0/temp1
-/sys/class/hwmon/hwmon0/hwmon0/temp2
+/sys/class/hwmon/hwmon0/temp0
+/sys/class/hwmon/hwmon0/temp1
+/sys/class/hwmon/hwmon0/temp2
 null
 "
 
