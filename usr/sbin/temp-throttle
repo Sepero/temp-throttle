@@ -173,7 +173,7 @@ get_temp () {
 
 # Try to return everything to normal before exiting.
 exit_function () {
-	true
+	exit
 }
 
 ### END define script functions.
