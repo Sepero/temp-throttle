@@ -227,16 +227,19 @@ get_temp () {
 
 # Try to return everything to normal before exiting.
 exit_function () {
-	exit
+	log_info "Program exits. Cleaning up"
+	CURRENT_FREQ=2 # unthrottle will decrease it
+	unthrottle
 }
 
 ### END define script functions.
 
-trap exit_function EXIT SIGINT SIGTERM
-
 log_info "Initialize to max CPU frequency"
 get_temp
 unthrottle
+
+# trap only if unthrottle successful at least once
+trap exit_function EXIT
 
 
 # Main loop
