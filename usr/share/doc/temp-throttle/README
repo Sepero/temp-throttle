@@ -8,7 +8,7 @@ Set a maximum temperature for your system using this script. If the maximum temp
 
 This script must be run with root or sudo privileges. Only Celsius temperatures are supported. This example will limit system temperatures to 80 Celsius:
 
-    sudo ./temp-throttle.sh 80
+    sudo ./temp-throttle 80
 
 
 For more instructions, see here:  
@@ -22,5 +22,5 @@ Links: http://seperohacker.blogspot.com/2012/10/linux-keep-your-cpu-cool-with-fr
 
 License: GNU GPL 2.0
 
-Usage: `temp-throttle.sh max_temp`  
+Usage: `temp-throttle max_temp`
 USES CELSIUS TEMPERATURES  
