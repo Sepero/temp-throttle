@@ -61,6 +61,7 @@ simple_parse () {
 	# Get value for MAX_TEMP.
 	MAX_TEMP="$(echo "$CONFIG" | sed -n 's/^max_temp=//ip')"
 	LOW_TEMP="$(echo "$CONFIG" | sed -n 's/^low_temp=//ip')"
+	TEMP_FILE="$(echo "$CONFIG" | sed -n 's/^temp_file=//ip')"
 }
 
 # Function for validating temperature argument.
@@ -73,6 +74,7 @@ check_temperature() {
 # Initialize configuration variables.
 MAX_TEMP=""
 LOW_TEMP=""
+TEMP_FILE=""
 LOG_FILE=""
 CONFIG_FILE="/etc/temp-throttle.conf"
 
@@ -81,7 +83,7 @@ CONFIG_FILE="/etc/temp-throttle.conf"
 
 # Get command line arguments.
 print_usage() {
-	echo "Usage: $0 [ -d low_temp ] [ -u ] max_temp" >&2
+	echo "Usage: $0 [ -t temp_src_file ] [ -d low_temp ] [ -u ] max_temp" >&2
 }
 while getopts "l:t:f:u:d:" OPT; do
 	case "$OPT" in
@@ -90,6 +92,8 @@ while getopts "l:t:f:u:d:" OPT; do
 		u) MAX_TEMP="$OPTARG"
 			;;
 		d) LOW_TEMP="$OPTARG"
+			;;
+		t) TEMP_FILE="$OPTARG"
 			;;
 		*) err_exit "Unkown parameter $OPT"
 			;;
@@ -149,6 +153,7 @@ CURRENT_FREQ=2
 # This is a list of possible locations to read the current system temperature.
 # We use the first file found.
 TEMPERATURE_FILES="
+$TEMP_FILE
 /sys/class/thermal/thermal_zone0/temp
 /sys/class/thermal/thermal_zone1/temp
 /sys/class/thermal/thermal_zone2/temp
