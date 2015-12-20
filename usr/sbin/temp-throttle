@@ -23,10 +23,29 @@ EOF
 
 # set -x
 
+# syslog integration
+PROGRAM_NAME="$(basename "$0")"
+
+log() {
+	level="$1"; shift
+	# Would be good to pass ``--id=$$ --tag "${PROGRAM_NAME}"``, but this might
+	# be not supported.
+	logger --stderr --tag "${PROGRAM_NAME}[$$]" --priority "user.${level}" "$@"
+}
+log_error() {
+	log err "$@"
+}
+log_info() {
+	log info "$@"
+}
+log_debug() {
+	log debug "$@"
+}
+
 # Generic function for printing an error and exiting.
-err_exit () {
-	echo ""
-	echo -e "Error: $@" 1>&2
+err_exit() {
+	echo "" >&2
+	log_error "Error: $@. Exiting"
 	exit 128
 }
 
@@ -83,15 +102,15 @@ shift $((OPTIND-1)); # discard flags processed by getopts
 # Verify max temperature. It must be set and must be an integer.
 [ "$MAX_TEMP" != "" ] || { print_usage; err_exit "Maximum desired temperature was not specified"; }
 check_temperature "$MAX_TEMP" "Maximum"
-echo "Maximum temperature set to: ${MAX_TEMP}C"
+log_info "Maximum temperature set to: ${MAX_TEMP}C"
 
 # Verify low temperature. If set, it must be an integer, else provide default.
 # The frequency will increase when low temperature is reached.
 [ "$LOW_TEMP" != "" ] || LOW_TEMP=$((MAX_TEMP - 5))
 check_temperature "$LOW_TEMP" "Low"
-echo "Low temperature set to: ${LOW_TEMP}C"
+log_info "Low temperature set to: ${LOW_TEMP}C"
 
-[ $LOW_TEMP -lt $MAX_TEMP ] || err_exit "Low temperature must be below max temperature."
+[ $LOW_TEMP -lt $MAX_TEMP ] || err_exit "Low temperature must be below max temperature"
 
 
 ### END Get configuration arguments.
@@ -100,7 +119,7 @@ echo "Low temperature set to: ${LOW_TEMP}C"
 ### START Initialize Global variables.
 
 CORES=$(nproc) # Get number of CPU cores.
-echo -e "Number of CPU cores detected: $CORES\n"
+log_debug "Number of CPU cores detected: $CORES"
 CORES=$((CORES - 1)) # Subtract 1 from $CORES for easier counting later.
 
 # Temperatures internally are calculated to the thousandth.
@@ -152,7 +171,8 @@ for file in $TEMPERATURE_FILES; do
 	[ -f $TEMP_FILE ] && break
 done
 
-[ $TEMP_FILE == "null" ] && err_exit "The location for temperature reading was not found.\nPlease reference bug #7: https://github.com/Sepero/temp-throttle/issues/7"
+[ $TEMP_FILE == "null" ] && err_exit "The location for temperature reading was not found. Please reference bug #7: https://github.com/Sepero/temp-throttle/issues/7"
+log_info "Using ${TEMP_FILE} as the source of temperature"
 
 
 ### END Initialize Global variables.
@@ -164,14 +184,14 @@ done
 set_freq () {
 	# From the string FREQ_LIST, we choose the item at index CURRENT_FREQ.
 	FREQ_TO_SET=$(echo $FREQ_LIST | cut -d " " -f $CURRENT_FREQ)
-	echo $FREQ_TO_SET
+	log_info "Temperature $TEMP mC. $1 CPU frequency to $FREQ_TO_SET Hz"
 	for i in $(seq 0 $CORES); do
 		# Try to set core frequency by writing to /sys/devices.
 		{ echo $FREQ_TO_SET 2> /dev/null > /sys/devices/system/cpu/cpu$i/cpufreq/scaling_max_freq; } ||
 		# Else, try to set core frequency using command cpufreq-set.
 		{ cpufreq-set -c $i --max $FREQ_TO_SET > /dev/null; } ||
 		# Else, return error message.
-		{ err_exit "Failed to set frequency CPU core$i. Run script as Root user. Some systems may require to install the package cpufrequtils."; }
+		{ err_exit "Failed to set frequency CPU core$i. Run script as Root user. Some systems may require to install the package cpufrequtils"; }
 	done
 }
 
@@ -179,8 +199,7 @@ set_freq () {
 throttle () {
 	if [ $CURRENT_FREQ -lt $FREQ_LIST_LEN ]; then
 		CURRENT_FREQ=$((CURRENT_FREQ + 1))
-		echo -n "throttle "
-		set_freq $CURRENT_FREQ
+		set_freq "throttle"
 	fi
 }
 
@@ -188,8 +207,7 @@ throttle () {
 unthrottle () {
 	if [ $CURRENT_FREQ -ne 1 ]; then
 		CURRENT_FREQ=$((CURRENT_FREQ - 1))
-		echo -n "unthrottle "
-		set_freq $CURRENT_FREQ
+		set_freq "unthrottle"
 	fi
 }
 
@@ -207,7 +225,8 @@ exit_function () {
 
 trap exit_function EXIT SIGINT SIGTERM
 
-echo "Initialize to max CPU frequency"
+log_info "Initialize to max CPU frequency"
+get_temp
 unthrottle
 
 
