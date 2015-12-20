@@ -4,6 +4,12 @@
 # USE CELSIUS TEMPERATURES.
 # version 2.40
 
+
+# exit on subcommand error, including pipes or when using undeclared variable
+set -o errexit
+set -o pipefail
+set -o nounset
+
 cat << EOF
 Author: Sepero 2016 (sepero 111 @ gmx . com)
 URL: http://github.com/Sepero/temp-throttle/
