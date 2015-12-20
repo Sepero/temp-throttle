@@ -62,6 +62,7 @@ simple_parse () {
 	MAX_TEMP="$(echo "$CONFIG" | sed -n 's/^max_temp=//ip')"
 	LOW_TEMP="$(echo "$CONFIG" | sed -n 's/^low_temp=//ip')"
 	TEMP_FILE="$(echo "$CONFIG" | sed -n 's/^temp_file=//ip')"
+	CHECK_FREQUENCY="$(echo "$CONFIG" | sed -n 's/^check_frequency=//ip')"
 }
 
 # Function for validating temperature argument.
@@ -75,6 +76,7 @@ check_temperature() {
 MAX_TEMP=""
 LOW_TEMP=""
 TEMP_FILE=""
+CHECK_FREQUENCY=3
 LOG_FILE=""
 CONFIG_FILE="/etc/temp-throttle.conf"
 
@@ -83,7 +85,7 @@ CONFIG_FILE="/etc/temp-throttle.conf"
 
 # Get command line arguments.
 print_usage() {
-	echo "Usage: $0 [ -t temp_src_file ] [ -d low_temp ] [ -u ] max_temp" >&2
+	echo "Usage: $0 [ -t temp_src_file ] [ -f check_frequency ] [ -d low_temp ] [ -u ] max_temp" >&2
 }
 while getopts "l:t:f:u:d:" OPT; do
 	case "$OPT" in
@@ -94,6 +96,8 @@ while getopts "l:t:f:u:d:" OPT; do
 		d) LOW_TEMP="$OPTARG"
 			;;
 		t) TEMP_FILE="$OPTARG"
+			;;
+		f) CHECK_FREQUENCY="$OPTARG"
 			;;
 		*) err_exit "Unkown parameter $OPT"
 			;;
@@ -177,7 +181,7 @@ for file in $TEMPERATURE_FILES; do
 done
 
 [ $TEMP_FILE == "null" ] && err_exit "The location for temperature reading was not found. Please reference bug #7: https://github.com/Sepero/temp-throttle/issues/7"
-log_info "Using ${TEMP_FILE} as the source of temperature"
+log_info "Using ${TEMP_FILE} as the source of temperature. Checking every ${CHECK_FREQUENCY}s"
 
 
 ### END Initialize Global variables.
@@ -243,7 +247,7 @@ while true; do
 	elif [ $TEMP -le $LOW_TEMP ]; then # Unthrottle if cool.
 		unthrottle
 	fi
-	sleep 3 # The amount of time between checking temperatures.
+	sleep "${CHECK_FREQUENCY}" # The amount of time between checking temperatures.
 done
 
 # vim:set sw=8 ts=8 sts=8 noet:
