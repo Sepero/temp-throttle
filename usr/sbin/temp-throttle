@@ -17,7 +17,7 @@ EOF
 
 # set -x
 
-# Generic  function for printing an error and exiting.
+# Generic function for printing an error and exiting.
 err_exit () {
 	echo ""
 	echo -e "Error: $@" 1>&2
@@ -30,15 +30,24 @@ err_exit () {
 simple_parse () {
 	CONFIG="$(cat $CONFIG_FILE   |
 		sed 's/[#;].*$//'        |  # Strip comments.
-		xargs                    |  # Trim whitespace.
+		sed 's/\s+$//'           |  # Trim trailing whitespace.
 		sed 's/\s*=\s*/=/')"  # Remove whitespace around "="
 
 	# Get value for MAX_TEMP.
-	MAX_TEMP="$(echo "$CONFIG" | sed -n 's/max_temp=//ip')"
+	MAX_TEMP="$(echo "$CONFIG" | sed -n 's/^max_temp=//ip')"
+	LOW_TEMP="$(echo "$CONFIG" | sed -n 's/^low_temp=//ip')"
+}
+
+# Function for validating temperature argument.
+# Usage: check_temperature "$TEMP" <Temperatue name for use in message>
+check_temperature() {
+	[[ "$1" =~ ^-?[0-9]+$ ]] ||
+		err_exit "$2 temperature '$1' is not an integer"
 }
 
 # Initialize configuration variables.
 MAX_TEMP=""
+LOW_TEMP=""
 LOG_FILE=""
 CONFIG_FILE="/etc/temp-throttle.conf"
 
@@ -46,31 +55,43 @@ CONFIG_FILE="/etc/temp-throttle.conf"
 [ -f "$CONFIG_FILE" ] && simple_parse
 
 # Get command line arguments.
-while getopts ":l" OPT; do
+print_usage() {
+	echo "Usage: $0 [ -d low_temp ] [ -u ] max_temp" >&2
+}
+while getopts "l:t:f:u:d:" OPT; do
 	case "$OPT" in
-		l) LOG_FILE="$OPTARG";;
-		*) ;;
+		l) LOG_FILE="$OPTARG"
+			;;
+		u) MAX_TEMP="$OPTARG"
+			;;
+		d) LOW_TEMP="$OPTARG"
+			;;
+		*) err_exit "Unkown parameter $OPT"
+			;;
 	esac
-	shift
 done
+shift $((OPTIND-1)); # discard flags processed by getopts
+
 [ $# -gt 0 ] && MAX_TEMP="$1"
 
-# If max temperature wasn't found, then print a message and exit.
-[ "$MAX_TEMP" != "" ] ||
-err_exit "Please supply a maximum desired temperature in Celsius.\nFor example:  ${0} 60"
+# Verify max temperature. It must be set and must be an integer.
+[ "$MAX_TEMP" != "" ] || { print_usage; err_exit "Maximum desired temperature was not specified"; }
+check_temperature "$MAX_TEMP" "Maximum"
 echo "Maximum temperature set to: ${MAX_TEMP}C"
 
-# Verify temperature is an integer.
-[[ "$MAX_TEMP" =~ ^-?[0-9]+$ ]] ||
-err_exit "Maximum temperature $MAX_TEMP must be an integer."
+# Verify low temperature. If set, it must be an integer, else provide default.
+# The frequency will increase when low temperature is reached.
+[ "$LOW_TEMP" != "" ] || LOW_TEMP=$((MAX_TEMP - 5))
+check_temperature "$LOW_TEMP" "Low"
+echo "Low temperature set to: ${LOW_TEMP}C"
+
+[ $LOW_TEMP -lt $MAX_TEMP ] || err_exit "Low temperature must be below max temperature."
+
 
 ### END Get configuration arguments.
 
 
 ### START Initialize Global variables.
-
-# The frequency will increase when low temperature is reached.
-LOW_TEMP=$((MAX_TEMP - 5))
 
 CORES=$(nproc) # Get number of CPU cores.
 echo -e "Number of CPU cores detected: $CORES\n"
@@ -194,3 +215,5 @@ while true; do
 	fi
 	sleep 3 # The amount of time between checking temperatures.
 done
+
+# vim:set sw=8 ts=8 sts=8 noet:
