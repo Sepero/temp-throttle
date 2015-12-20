@@ -1,8 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# Usage: temp_throttle.sh max_temp
+# Usage: temp-throttle max_temp
 # USE CELSIUS TEMPERATURES.
-# version 2.20
+# version 2.40
 
 cat << EOF
 Author: Sepero 2016 (sepero 111 @ gmx . com)
@@ -13,27 +13,58 @@ EOF
 # Additional Links
 # http://seperohacker.blogspot.com/2012/10/linux-keep-your-cpu-cool-with-frequency.html
 
-# Additional Credits
-# Wolfgang Ocker <weo AT weo1 DOT de> - Patch for unspecified cpu frequencies.
-
 # License: GNU GPL 2.0
+
+# set -x
 
 # Generic  function for printing an error and exiting.
 err_exit () {
 	echo ""
-	echo "Error: $@" 1>&2
+	echo -e "Error: $@" 1>&2
 	exit 128
 }
 
-if [ $# -ne 1 ]; then
-	# If temperature wasn't given, then print a message and exit.
-	echo "Please supply a maximum desired temperature in Celsius." 1>&2
-	echo "For example:  ${0} 60" 1>&2
-	exit 2
-else
-	#Set the first argument as the maximum desired temperature.
-	MAX_TEMP=$1
-fi
+### START Get configuration arguments.
+
+# Function for parsing the configuration file.
+simple_parse () {
+	CONFIG="$(cat $CONFIG_FILE   |
+		sed 's/[#;].*$//'        |  # Strip comments.
+		xargs                    |  # Trim whitespace.
+		sed 's/\s*=\s*/=/')"  # Remove whitespace around "="
+
+	# Get value for MAX_TEMP.
+	MAX_TEMP="$(echo "$CONFIG" | sed -n 's/max_temp=//ip')"
+}
+
+# Initialize configuration variables.
+MAX_TEMP=""
+LOG_FILE=""
+CONFIG_FILE="/etc/temp-throttle.conf"
+
+# Read configuration file if it exists.
+[ -f "$CONFIG_FILE" ] && simple_parse
+
+# Get command line arguments.
+while getopts ":l" OPT; do
+	case "$OPT" in
+		l) LOG_FILE="$OPTARG";;
+		*) ;;
+	esac
+	shift
+done
+[ $# -gt 0 ] && MAX_TEMP="$1"
+
+# If max temperature wasn't found, then print a message and exit.
+[ "$MAX_TEMP" != "" ] ||
+err_exit "Please supply a maximum desired temperature in Celsius.\nFor example:  ${0} 60"
+echo "Maximum temperature set to: ${MAX_TEMP}C"
+
+# Verify temperature is an integer.
+[[ "$MAX_TEMP" =~ ^-?[0-9]+$ ]] ||
+err_exit "Maximum temperature $MAX_TEMP must be an integer."
+
+### END Get configuration arguments.
 
 
 ### START Initialize Global variables.
@@ -56,7 +87,7 @@ FREQ_MAX="/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq"
 # Store available cpu frequencies in a space separated string FREQ_LIST.
 if [ -f $FREQ_FILE ]; then
 	# If $FREQ_FILE exists, get frequencies from it.
-	FREQ_LIST=$(cat $FREQ_FILE) || err_exit "Could not read available cpu frequencies from file $FREQ_FILE"
+	FREQ_LIST=$(cat $FREQ_FILE | xargs -n1 | sort -urn) || err_exit "Could not read available cpu frequencies from file $FREQ_FILE"
 elif [ -f $FREQ_MIN -a -f $FREQ_MAX ]; then
 	# Else if $FREQ_MIN and $FREQ_MAX exist, generate a list of frequencies between them.
 	FREQ_LIST=$(seq $(cat $FREQ_MAX) -100000 $(cat $FREQ_MIN)) || err_exit "Could not compute available cpu frequencies"
@@ -66,10 +97,11 @@ fi
 
 FREQ_LIST_LEN=$(echo $FREQ_LIST | wc -w)
 
-# CURRENT_FREQ will save the index of the currently used frequency in FREQ_LIST.
+# CURRENT_FREQ will keep the index of the currently used frequency in FREQ_LIST.
 CURRENT_FREQ=2
 
 # This is a list of possible locations to read the current system temperature.
+# We use the first file found.
 TEMPERATURE_FILES="
 /sys/class/thermal/thermal_zone0/temp
 /sys/class/thermal/thermal_zone1/temp
@@ -80,6 +112,9 @@ TEMPERATURE_FILES="
 /sys/class/hwmon/hwmon0/device/temp1_input
 /sys/class/hwmon/hwmon1/device/temp1_input
 /sys/class/hwmon/hwmon2/device/temp1_input
+/sys/class/hwmon/hwmon0/temp0
+/sys/class/hwmon/hwmon0/temp1
+/sys/class/hwmon/hwmon0/temp2
 null
 "
 
@@ -90,7 +125,7 @@ for file in $TEMPERATURE_FILES; do
 	[ -f $TEMP_FILE ] && break
 done
 
-[ $TEMP_FILE == "null" ] && err_exit "The location for temperature reading was not found."
+[ $TEMP_FILE == "null" ] && err_exit "The location for temperature reading was not found.\nPlease reference bug #7: https://github.com/Sepero/temp-throttle/issues/7"
 
 
 ### END Initialize Global variables.
@@ -131,13 +166,19 @@ unthrottle () {
 	fi
 }
 
+# Get the system temperature.
 get_temp () {
-	# Get the system temperature.
-	
 	TEMP=$(cat $TEMP_FILE)
 }
 
+# Try to return everything to normal before exiting.
+exit_function () {
+	exit
+}
+
 ### END define script functions.
+
+trap exit_function EXIT SIGINT SIGTERM
 
 echo "Initialize to max CPU frequency"
 unthrottle

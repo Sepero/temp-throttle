@@ -1,0 +1,11 @@
+Current Maintainer
+Sepero <sepero 111 AT gmx DOT com>
+
+Original Author
+Sepero <sepero 111 AT gmx DOT com>
+
+Additional Credits
+Wolfgang Ocker <weo AT weo1 DOT de> - Patch for unspecified cpu frequencies.
+Neraste (github.com) - ARM Architecture patch for backwards reported frequencies.
+Glutanimate (github.com) - Catch script exit and reset CPU to maximum frequency.
+martin-schmidt (github.com) - Configuration file and init.d startup support.
