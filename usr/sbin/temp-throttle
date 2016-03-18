@@ -28,17 +28,29 @@ err_exit () {
 
 # Function for parsing the configuration file.
 simple_parse () {
-	CONFIG="$(cat $CONFIG_FILE   |
+	while read line
+	do
+		parsed_line=`echo "$line"  |
 		sed 's/[#;].*$//'        |  # Strip comments.
 		xargs                    |  # Trim whitespace.
-		sed 's/\s*=\s*/=/')"  # Remove whitespace around "="
-
-	# Get value for MAX_TEMP.
-	MAX_TEMP="$(echo "$CONFIG" | sed -n 's/max_temp=//ip')"
+		sed 's/\s*=\s*/=/'`  # Remove whitespace around "="
+		if echo "$parsed_line" | grep -q -i '^max_temp'
+		then
+			# Get value for MAX_TEMP.
+			MAX_TEMP=`echo $parsed_line | sed -n 's/^[^=]*=//p'`
+		else
+			if echo "$parsed_line" | grep -q -i '^temperature_file'
+			then
+				# Get alternate temperature file
+				USER_TEMPERATURE_FILE=`echo $parsed_line | sed -n 's/^[^=]*=//p'`
+			fi
+		fi
+	done < "$CONFIG_FILE"
 }
 
 # Initialize configuration variables.
 MAX_TEMP=""
+USER_TEMPERATURE_FILE=""
 LOG_FILE=""
 CONFIG_FILE="/etc/temp-throttle.conf"
 
@@ -103,6 +115,7 @@ CURRENT_FREQ=2
 # This is a list of possible locations to read the current system temperature.
 # We use the first file found.
 TEMPERATURE_FILES="
+$USER_TEMPERATURE_FILE
 /sys/class/thermal/thermal_zone0/temp
 /sys/class/thermal/thermal_zone1/temp
 /sys/class/thermal/thermal_zone2/temp
