@@ -2,7 +2,7 @@
 
 # Usage: temp-throttle max_temp
 # USE CELSIUS TEMPERATURES.
-# version 2.40
+# version 2.41
 
 cat << EOF
 Author: Sepero 2016 (sepero 111 @ gmx . com)
@@ -28,36 +28,25 @@ err_exit () {
 
 # Function for parsing the configuration file.
 simple_parse () {
-	while read line
-	do
-		parsed_line=`echo "$line"  |
+	CONFIG="$(cat $CONFIG_FILE   |
 		sed 's/[#;].*$//'        |  # Strip comments.
 		xargs                    |  # Trim whitespace.
-		sed 's/\s*=\s*/=/'`  # Remove whitespace around "="
-		if echo "$parsed_line" | grep -q -i '^max_temp'
-		then
-			# Get value for MAX_TEMP.
-			MAX_TEMP=`echo $parsed_line | sed -n 's/^[^=]*=//p'`
-		else
-			if echo "$parsed_line" | grep -q -i '^temperature_file'
-			then
-				# Get alternate temperature file
-				USER_TEMPERATURE_FILE=`echo $parsed_line | sed -n 's/^[^=]*=//p'`
-			fi
-		fi
-	done < "$CONFIG_FILE"
+		sed 's/\s*=\s*/=/')"        # Remove whitespace around "="
+		
+		MAX_TEMP="$(echo "$CONFIG" | sed -n '$s/MAX_TEMP=//ip')"
+		CONFIG_TEMPERATURE_FILE="$(echo "$CONFIG" | sed -n '$s/TEMPERATURE_FILE=//ip')"
 }
 
 # Initialize configuration variables.
 MAX_TEMP=""
-USER_TEMPERATURE_FILE=""
+CONFIG_TEMPERATURE_FILE=""
 LOG_FILE=""
 CONFIG_FILE="/etc/temp-throttle.conf"
 
 # Read configuration file if it exists.
 [ -f "$CONFIG_FILE" ] && simple_parse
 
-# Get command line arguments.
+# Get command line arguments. ##UNFINISHED
 while getopts ":l" OPT; do
 	case "$OPT" in
 		l) LOG_FILE="$OPTARG";;
@@ -65,6 +54,8 @@ while getopts ":l" OPT; do
 	esac
 	shift
 done
+
+# Take first argument as Max temperature.
 [ $# -gt 0 ] && MAX_TEMP="$1"
 
 # If max temperature wasn't found, then print a message and exit.
@@ -138,7 +129,10 @@ for file in $TEMPERATURE_FILES; do
 	[ -f $TEMP_FILE ] && break
 done
 
-[ $TEMP_FILE == "null" ] && err_exit "The location for temperature reading was not found.\nPlease reference bug #7: https://github.com/Sepero/temp-throttle/issues/7"
+# If temperature file from temp-throttle.conf is set, then we use that.
+[ "$CONFIG_TEMPERATURE_FILE" != "" ] && TEMP_FILE="$CONFIG_TEMPERATURE_FILE"
+
+[ "$TEMP_FILE" == "null" ] && err_exit "The location for temperature reading was not found.\nPlease reference bug #7: https://github.com/Sepero/temp-throttle/issues/7"
 
 
 ### END Initialize Global variables.
