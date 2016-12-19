@@ -15,14 +15,39 @@ EOF
 
 # License: GNU GPL 2.0
 
-# set -x
+declare -r CONFIG_FILE="/etc/`basename $0`.conf"
+declare -r LOCK_FILE="/var/lock/`basename $0`.lock"
+
+[ -f "${LOCK_FILE}" ] && exit 1
+
+
+# Try to return everything to normal before exiting.
+exit_function () {
+	rm -f "${LOCK_FILE}"
+	exit $1
+}
 
 # Generic  function for printing an error and exiting.
 err_exit () {
 	echo ""
-	echo -e "Error: $@" 1>&2
-	exit 128
+	echo -e "Error: ${1:-"Unknown error, aborted"}" 1>&2
+	exit_function 128
 }
+
+showHelp() {
+	echo "Usage: `basename $0` [<options...>] <celsius>"
+	echo ""
+	echo "Options:"
+	echo "  -c, --check <n>   check temperature every <n> seconds"
+	echo "  -h, --help        show this help"
+	exit_function
+}
+
+trap exit_function EXIT SIGHUP SIGINT SIGTERM
+trap err_exit ERR
+
+touch "${LOCK_FILE}"
+
 
 ### START Get configuration arguments.
 
@@ -34,38 +59,48 @@ simple_parse () {
 		sed 's/\s*=\s*/=/')"        # Remove whitespace around "="
 		
 		MAX_TEMP="$(echo "$CONFIG" | sed -n '$s/MAX_TEMP=//ip')"
-		CONFIG_TEMPERATURE_FILE="$(echo "$CONFIG" | sed -n '$s/TEMPERATURE_FILE=//ip')"
+		TEMP_FILE="$(echo "$CONFIG" | sed -n '$s/TEMPERATURE_FILE=//ip')"
+		CHECK_SECS="$(echo "$CONFIG" | sed -n 's/^CHECK_SECS=//ip')"
 }
 
 # Initialize configuration variables.
 MAX_TEMP=""
-CONFIG_TEMPERATURE_FILE=""
-LOG_FILE=""
-CONFIG_FILE="/etc/temp-throttle.conf"
+TEMP_FILE=""
+CHECK_SECS=3
 
 # Read configuration file if it exists.
 [ -f "$CONFIG_FILE" ] && simple_parse
 
-# Get command line arguments. ##UNFINISHED
-while getopts ":l" OPT; do
-	case "$OPT" in
-		l) LOG_FILE="$OPTARG";;
-		*) ;;
+# Get command line arguments
+while [ "$1" != "" ]; do
+	case $1 in
+		-c | --check)
+			shift
+			CHECK_SECS="$1"
+			;;
+		-h | --help)
+			showHelp
+			;;
+		*)
+			[ -z "${MAX_TEMP}" ] && MAX_TEMP="$1"
+			;;
 	esac
 	shift
 done
 
-# Take first argument as Max temperature.
-[ $# -gt 0 ] && MAX_TEMP="$1"
 
 # If max temperature wasn't found, then print a message and exit.
 [ "$MAX_TEMP" != "" ] ||
 err_exit "Please supply a maximum desired temperature in Celsius.\nFor example:  ${0} 60"
-echo "Maximum temperature set to: ${MAX_TEMP}C"
+echo "Maximum temperature set to: ${MAX_TEMP}°C"
 
 # Verify temperature is an integer.
 [[ "$MAX_TEMP" =~ ^-?[0-9]+$ ]] ||
 err_exit "Maximum temperature $MAX_TEMP must be an integer."
+
+# Verify sleep seconds are an integer.
+[[ "${CHECK_SECS}" =~ ^[0-9]+$ ]] ||
+err_exit "Seconds between checks must be an integer."
 
 ### END Get configuration arguments.
 
@@ -105,34 +140,36 @@ CURRENT_FREQ=2
 
 # This is a list of possible locations to read the current system temperature.
 # We use the first file found.
-TEMPERATURE_FILES="
-$USER_TEMPERATURE_FILE
-/sys/class/thermal/thermal_zone0/temp
-/sys/class/thermal/thermal_zone1/temp
-/sys/class/thermal/thermal_zone2/temp
-/sys/class/hwmon/hwmon0/temp1_input
-/sys/class/hwmon/hwmon1/temp1_input
-/sys/class/hwmon/hwmon2/temp1_input
-/sys/class/hwmon/hwmon0/device/temp1_input
-/sys/class/hwmon/hwmon1/device/temp1_input
-/sys/class/hwmon/hwmon2/device/temp1_input
-/sys/class/hwmon/hwmon0/temp0
-/sys/class/hwmon/hwmon0/temp1
-/sys/class/hwmon/hwmon0/temp2
-null
-"
 
-# Store the first temperature location that exists in the variable TEMP_FILE.
-# The location stored in $TEMP_FILE will be used for temperature readings.
-for file in $TEMPERATURE_FILES; do
-	TEMP_FILE=$file
-	[ -f $TEMP_FILE ] && break
-done
-
-# If temperature file from temp-throttle.conf is set, then we use that.
-[ "$CONFIG_TEMPERATURE_FILE" != "" ] && TEMP_FILE="$CONFIG_TEMPERATURE_FILE"
-
-[ "$TEMP_FILE" == "null" ] && err_exit "The location for temperature reading was not found.\nPlease reference bug #7: https://github.com/Sepero/temp-throttle/issues/7"
+if [[ -n "${TEMP_FILE}" && ! -r "${TEMP_FILE}" ]]; then
+	err_exit "Given temperature location does not exist"
+elif [[ -z "${TEMP_FILE}" ]]; then
+	for p in /sys/class/thermal/thermal_zone*/temp; do
+		if [[ -r "$p" ]]; then
+			TEMP_FILE=$p
+			break
+		fi
+	done
+	if [[ -z "${TEMP_FILE}" ]]; then
+		for p in /sys/class/hwmon/hwmon*/temp*_input; do
+			if [[ -r "$p" ]]; then
+				TEMP_FILE=$p
+				break
+			fi
+		done
+	fi
+	if [[ -z "${TEMP_FILE}" ]]; then
+		for p in /sys/class/hwmon/hwmon*/device/temp*_input; do
+			if [[ -r "$p" ]]; then
+				TEMP_FILE=$p
+				break
+			fi
+		done
+	fi
+	if [[ -z "${TEMP_FILE}" ]]; then
+		err_exit "The location for temperature reading was not found.\nPlease reference bug #7: https://github.com/Sepero/temp-throttle/issues/7"
+	fi
+fi
 
 
 ### END Initialize Global variables.
@@ -178,14 +215,8 @@ get_temp () {
 	TEMP=$(cat $TEMP_FILE)
 }
 
-# Try to return everything to normal before exiting.
-exit_function () {
-	exit
-}
 
 ### END define script functions.
-
-trap exit_function EXIT SIGINT SIGTERM
 
 echo "Initialize to max CPU frequency"
 unthrottle
@@ -199,5 +230,5 @@ while true; do
 	elif [ $TEMP -le $LOW_TEMP ]; then # Unthrottle if cool.
 		unthrottle
 	fi
-	sleep 3 # The amount of time between checking temperatures.
+	sleep ${CHECK_SECS} # The amount of time between checking temperatures.
 done
