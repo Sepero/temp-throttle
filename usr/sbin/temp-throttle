@@ -15,14 +15,30 @@ EOF
 
 # License: GNU GPL 2.0
 
-# set -x
+declare -r CONFIG_FILE="/etc/`basename $0`.conf"
+declare -r LOCK_FILE="/var/lock/`basename $0`.lock"
+
+[ -f "${LOCK_FILE}" ] && exit 1
+
+
+# Try to return everything to normal before exiting.
+exit_function () {
+	rm -f "${LOCK_FILE}"
+	exit $1
+}
 
 # Generic  function for printing an error and exiting.
 err_exit () {
 	echo ""
-	echo -e "Error: $@" 1>&2
-	exit 128
+	echo -e "Error: ${1:-"Unknown error, aborted"}" 1>&2
+	exit_function 128
 }
+
+trap exit_function EXIT SIGHUP SIGINT SIGTERM
+trap err_exit ERR
+
+touch "${LOCK_FILE}"
+
 
 ### START Get configuration arguments.
 
@@ -41,7 +57,6 @@ simple_parse () {
 MAX_TEMP=""
 CONFIG_TEMPERATURE_FILE=""
 LOG_FILE=""
-CONFIG_FILE="/etc/temp-throttle.conf"
 
 # Read configuration file if it exists.
 [ -f "$CONFIG_FILE" ] && simple_parse
@@ -178,14 +193,8 @@ get_temp () {
 	TEMP=$(cat $TEMP_FILE)
 }
 
-# Try to return everything to normal before exiting.
-exit_function () {
-	exit
-}
 
 ### END define script functions.
-
-trap exit_function EXIT SIGINT SIGTERM
 
 echo "Initialize to max CPU frequency"
 unthrottle
