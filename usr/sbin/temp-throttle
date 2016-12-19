@@ -50,12 +50,12 @@ simple_parse () {
 		sed 's/\s*=\s*/=/')"        # Remove whitespace around "="
 		
 		MAX_TEMP="$(echo "$CONFIG" | sed -n '$s/MAX_TEMP=//ip')"
-		CONFIG_TEMPERATURE_FILE="$(echo "$CONFIG" | sed -n '$s/TEMPERATURE_FILE=//ip')"
+		TEMP_FILE="$(echo "$CONFIG" | sed -n '$s/TEMPERATURE_FILE=//ip')"
 }
 
 # Initialize configuration variables.
 MAX_TEMP=""
-CONFIG_TEMPERATURE_FILE=""
+TEMP_FILE=""
 LOG_FILE=""
 
 # Read configuration file if it exists.
@@ -76,7 +76,7 @@ done
 # If max temperature wasn't found, then print a message and exit.
 [ "$MAX_TEMP" != "" ] ||
 err_exit "Please supply a maximum desired temperature in Celsius.\nFor example:  ${0} 60"
-echo "Maximum temperature set to: ${MAX_TEMP}C"
+echo "Maximum temperature set to: ${MAX_TEMP}°C"
 
 # Verify temperature is an integer.
 [[ "$MAX_TEMP" =~ ^-?[0-9]+$ ]] ||
@@ -120,34 +120,36 @@ CURRENT_FREQ=2
 
 # This is a list of possible locations to read the current system temperature.
 # We use the first file found.
-TEMPERATURE_FILES="
-$USER_TEMPERATURE_FILE
-/sys/class/thermal/thermal_zone0/temp
-/sys/class/thermal/thermal_zone1/temp
-/sys/class/thermal/thermal_zone2/temp
-/sys/class/hwmon/hwmon0/temp1_input
-/sys/class/hwmon/hwmon1/temp1_input
-/sys/class/hwmon/hwmon2/temp1_input
-/sys/class/hwmon/hwmon0/device/temp1_input
-/sys/class/hwmon/hwmon1/device/temp1_input
-/sys/class/hwmon/hwmon2/device/temp1_input
-/sys/class/hwmon/hwmon0/temp0
-/sys/class/hwmon/hwmon0/temp1
-/sys/class/hwmon/hwmon0/temp2
-null
-"
 
-# Store the first temperature location that exists in the variable TEMP_FILE.
-# The location stored in $TEMP_FILE will be used for temperature readings.
-for file in $TEMPERATURE_FILES; do
-	TEMP_FILE=$file
-	[ -f $TEMP_FILE ] && break
-done
-
-# If temperature file from temp-throttle.conf is set, then we use that.
-[ "$CONFIG_TEMPERATURE_FILE" != "" ] && TEMP_FILE="$CONFIG_TEMPERATURE_FILE"
-
-[ "$TEMP_FILE" == "null" ] && err_exit "The location for temperature reading was not found.\nPlease reference bug #7: https://github.com/Sepero/temp-throttle/issues/7"
+if [[ -n "${TEMP_FILE}" && ! -r "${TEMP_FILE}" ]]; then
+	err_exit "Given temperature location does not exist"
+elif [[ -z "${TEMP_FILE}" ]]; then
+	for p in /sys/class/thermal/thermal_zone*/temp; do
+		if [[ -r "$p" ]]; then
+			TEMP_FILE=$p
+			break
+		fi
+	done
+	if [[ -z "${TEMP_FILE}" ]]; then
+		for p in /sys/class/hwmon/hwmon*/temp*_input; do
+			if [[ -r "$p" ]]; then
+				TEMP_FILE=$p
+				break
+			fi
+		done
+	fi
+	if [[ -z "${TEMP_FILE}" ]]; then
+		for p in /sys/class/hwmon/hwmon*/device/temp*_input; do
+			if [[ -r "$p" ]]; then
+				TEMP_FILE=$p
+				break
+			fi
+		done
+	fi
+	if [[ -z "${TEMP_FILE}" ]]; then
+		err_exit "The location for temperature reading was not found.\nPlease reference bug #7: https://github.com/Sepero/temp-throttle/issues/7"
+	fi
+fi
 
 
 ### END Initialize Global variables.
