@@ -36,6 +36,12 @@ declare -r LOCK_FILE="/var/lock/`basename $0`.lock"
 
 # Try to return everything to normal before exiting.
 exit_function () {
+	# restore highest frequency on regular exit
+	if [[ -z "$1" && "${CURRENT_FREQ}" -gt 1 ]]; then
+		CURRENT_FREQ=2
+		unthrottle
+	fi
+	# remove lock
 	rm -f "${LOCK_FILE}"
 	exit $1
 }
@@ -95,7 +101,7 @@ while [ "$1" != "" ]; do
 			showHelp
 			;;
 		*)
-			[ -z "${MAX_TEMP}" ] && MAX_TEMP="$1"
+			MAX_TEMP="$1"
 			;;
 	esac
 	shift
@@ -195,7 +201,7 @@ fi
 # Set the maximum frequency for all cpu cores.
 set_freq () {
 	# From the string FREQ_LIST, we choose the item at index CURRENT_FREQ.
-	FREQ_TO_SET=$(echo $FREQ_LIST | cut -d " " -f $CURRENT_FREQ)
+	FREQ_TO_SET=$(echo $FREQ_LIST | cut -d " " -f "$1")
 	echo $FREQ_TO_SET
 	for i in $(seq 0 $CORES); do
 		# Try to set core frequency by writing to /sys/devices.
