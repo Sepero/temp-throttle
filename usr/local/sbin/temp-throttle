@@ -79,7 +79,7 @@ simple_parse () {
 # Initialize configuration variables.
 MAX_TEMP=""
 TEMP_FILE=""
-CHECK_SECS=3
+CHECK_SECS=""
 
 # Read configuration file if it exists.
 [ -f "$CONFIG_FILE" ] && simple_parse
@@ -101,6 +101,8 @@ while [ "$1" != "" ]; do
 	shift
 done
 
+# Set default values
+[[ -z "${CHECK_SECS}" ]] && CHECK_SECS=3
 
 # If max temperature wasn't found, then print a message and exit.
 [ "$MAX_TEMP" != "" ] ||
