@@ -1,1 +1,1 @@
-usr/share/doc/temp-throttle/README
+usr/local/share/doc/temp-throttle/README

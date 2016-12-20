@@ -1,1 +1,1 @@
-usr/share/doc/temp-throttle/license.txt
+usr/local/share/doc/temp-throttle/license.txt
