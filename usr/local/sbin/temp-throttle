@@ -70,25 +70,13 @@ touch "${LOCK_FILE}"
 
 ### START Get configuration arguments.
 
-# Function for parsing the configuration file.
-simple_parse () {
-	CONFIG="$(cat $CONFIG_FILE   |
-		sed 's/[#;].*$//'        |  # Strip comments.
-		xargs                    |  # Trim whitespace.
-		sed 's/\s*=\s*/=/')"        # Remove whitespace around "="
-		
-		MAX_TEMP="$(echo "$CONFIG" | sed -n '$s/MAX_TEMP=//ip')"
-		TEMP_FILE="$(echo "$CONFIG" | sed -n '$s/TEMPERATURE_FILE=//ip')"
-		CHECK_SECS="$(echo "$CONFIG" | sed -n 's/^CHECK_SECS=//ip')"
-}
-
 # Initialize configuration variables.
 MAX_TEMP=""
 TEMP_FILE=""
 CHECK_SECS=""
 
 # Read configuration file if it exists.
-[ -f "$CONFIG_FILE" ] && simple_parse
+[ -f "${CONFIG_FILE}" ] && . "${CONFIG_FILE}"
 
 # Get command line arguments
 while [ "$1" != "" ]; do
