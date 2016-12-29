@@ -29,5 +29,9 @@ Links: http://seperohacker.blogspot.com/2012/10/linux-keep-your-cpu-cool-with-fr
 
 License: GNU GPL 2.0
 
-Usage: `temp-throttle max_temp`
-USES CELSIUS TEMPERATURES  
+    Usage: temp-throttle [<options...>] <celsius>
+    
+    Options:
+      -c, --check <n>   check temperature every <n> seconds
+          --no-syslog   turn off writing to syslog
+      -h, --help        show this help
