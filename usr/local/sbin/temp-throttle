@@ -34,6 +34,22 @@ declare -r LOCK_FILE="/var/lock/`basename $0`.lock"
 [ -f "${LOCK_FILE}" ] && exit 1
 
 
+# Logging
+log() {
+	prio="info"
+	case "$1" in
+		debug | info | notice | warning | err | crit | alert | emerg)
+			prio="$1"; shift
+			;;
+	esac
+	
+	echo -e "$@" >&2
+	if [[ -z "${NO_SYSLOG}" ]]; then
+		logger -t "`basename $0`" -p "user.${prio}" "$@"
+	fi
+}
+
+
 # Try to return everything to normal before exiting.
 exit_function () {
 	# restore highest frequency on regular exit
@@ -48,16 +64,16 @@ exit_function () {
 
 # Generic  function for printing an error and exiting.
 err_exit () {
-	echo ""
-	echo -e "Error: ${1:-"Unknown error, aborted"}" 1>&2
+	log err "Error: ${1:-"Unknown error, aborted"}"
 	exit_function 128
 }
 
-showHelp() {
+show_help() {
 	echo "Usage: `basename $0` [<options...>] <celsius>"
 	echo ""
 	echo "Options:"
 	echo "  -c, --check <n>   check temperature every <n> seconds"
+	echo "      --no-syslog   turn off writing to syslog"
 	echo "  -h, --help        show this help"
 	exit_function
 }
@@ -74,19 +90,23 @@ touch "${LOCK_FILE}"
 MAX_TEMP=""
 TEMP_FILE=""
 CHECK_SECS=""
+NO_SYSLOG=""
 
 # Read configuration file if it exists.
 [ -f "${CONFIG_FILE}" ] && . "${CONFIG_FILE}"
 
 # Get command line arguments
 while [ "$1" != "" ]; do
-	case $1 in
+	case "$1" in
 		-c | --check)
 			shift
 			CHECK_SECS="$1"
 			;;
+		--no-syslog)
+			NO_SYSLOG=1
+			;;
 		-h | --help)
-			showHelp
+			show_help
 			;;
 		*)
 			MAX_TEMP="$1"
@@ -101,7 +121,7 @@ done
 # If max temperature wasn't found, then print a message and exit.
 [ "$MAX_TEMP" != "" ] ||
 err_exit "Please supply a maximum desired temperature in Celsius.\nFor example:  ${0} 60"
-echo "Maximum temperature set to: ${MAX_TEMP}°C"
+log info "Maximum temperature set to: ${MAX_TEMP}°C"
 
 # Verify temperature is an integer.
 [[ "$MAX_TEMP" =~ ^-?[0-9]+$ ]] ||
@@ -120,7 +140,7 @@ err_exit "Seconds between checks must be an integer."
 LOW_TEMP=$((MAX_TEMP - 5))
 
 CORES=$(nproc) # Get number of CPU cores.
-echo -e "Number of CPU cores detected: $CORES\n"
+log info "Number of CPU cores detected: $CORES"
 CORES=$((CORES - 1)) # Subtract 1 from $CORES for easier counting later.
 
 # Temperatures internally are calculated to the thousandth.
@@ -189,8 +209,8 @@ fi
 # Set the maximum frequency for all cpu cores.
 set_freq () {
 	# From the string FREQ_LIST, we choose the item at index CURRENT_FREQ.
-	FREQ_TO_SET=$(echo $FREQ_LIST | cut -d " " -f "$1")
-	echo $FREQ_TO_SET
+	FREQ_TO_SET=$(echo $FREQ_LIST | cut -d " " -f "$CURRENT_FREQ")
+	log info "Temperature at $((TEMP / 1000))°C, $1 to $((FREQ_TO_SET / 1000 )) MHz"
 	for i in $(seq 0 $CORES); do
 		# Try to set core frequency by writing to /sys/devices.
 		{ echo $FREQ_TO_SET 2> /dev/null > /sys/devices/system/cpu/cpu$i/cpufreq/scaling_max_freq; } ||
@@ -205,8 +225,7 @@ set_freq () {
 throttle () {
 	if [ $CURRENT_FREQ -lt $FREQ_LIST_LEN ]; then
 		CURRENT_FREQ=$((CURRENT_FREQ + 1))
-		echo -n "throttle "
-		set_freq $CURRENT_FREQ
+		set_freq "throttle"
 	fi
 }
 
@@ -214,8 +233,7 @@ throttle () {
 unthrottle () {
 	if [ $CURRENT_FREQ -ne 1 ]; then
 		CURRENT_FREQ=$((CURRENT_FREQ - 1))
-		echo -n "unthrottle "
-		set_freq $CURRENT_FREQ
+		set_freq "unthrottle"
 	fi
 }
 
@@ -227,7 +245,9 @@ get_temp () {
 
 ### END define script functions.
 
-echo "Initialize to max CPU frequency"
+echo "" >&2
+log info "Initialize to max CPU frequency"
+get_temp
 unthrottle
 
 
