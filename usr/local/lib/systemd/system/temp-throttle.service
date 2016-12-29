@@ -2,7 +2,7 @@
 Description=Throttle system CPU frequency based on a maximum temperature
 
 [Service]
-ExecStart=/usr/local/sbin/temp-throttle
+ExecStart=/usr/local/sbin/temp-throttle --no-syslog
 Type=simple
 
 [Install]
