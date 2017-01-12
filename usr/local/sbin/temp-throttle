@@ -52,6 +52,8 @@ log() {
 
 # Try to return everything to normal before exiting.
 exit_function () {
+	trap "" EXIT SIGHUP SIGINT SIGTERM
+	
 	# restore highest frequency on regular exit
 	if [[ -z "$1" && "${CURRENT_FREQ}" -gt 1 ]]; then
 		CURRENT_FREQ=2
@@ -64,6 +66,8 @@ exit_function () {
 
 # Generic  function for printing an error and exiting.
 err_exit () {
+	trap "" ERR
+	
 	log err "Error: ${1:-"Unknown error, aborted"}"
 	exit_function 128
 }
@@ -75,7 +79,7 @@ show_help() {
 	echo "  -c, --check <n>   check temperature every <n> seconds"
 	echo "      --no-syslog   turn off writing to syslog"
 	echo "  -h, --help        show this help"
-	exit_function
+	exit
 }
 
 trap exit_function EXIT SIGHUP SIGINT SIGTERM
