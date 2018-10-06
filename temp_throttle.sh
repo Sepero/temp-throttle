@@ -56,7 +56,7 @@ FREQ_MAX="/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq"
 # Store available cpu frequencies in a space separated string FREQ_LIST.
 if [ -f $FREQ_FILE ]; then
 	# If $FREQ_FILE exists, get frequencies from it.
-	FREQ_LIST=$(cat $FREQ_FILE) || err_exit "Could not read available cpu frequencies from file $FREQ_FILE"
+	FREQ_LIST=$(cat $FREQ_FILE | xargs -n1 | sort -g -r | xargs) || err_exit "Could not read available cpu frequencies from file $FREQ_FILE"
 elif [ -f $FREQ_MIN -a -f $FREQ_MAX ]; then
 	# Else if $FREQ_MIN and $FREQ_MAX exist, generate a list of frequencies between them.
 	FREQ_LIST=$(seq $(cat $FREQ_MAX) -100000 $(cat $FREQ_MIN)) || err_exit "Could not compute available cpu frequencies"
@@ -132,9 +132,9 @@ unthrottle () {
 }
 
 get_temp () {
-	# Get the system temperature.
+	# Get the system temperature. Take the max of all counters
 	
-	TEMP=$(cat $TEMP_FILE)
+	TEMP=$(cat $TEMPERATURE_FILES 2>/dev/null | xargs -n1 | sort -g -r | head -1)
 }
 
 ### END define script functions.
