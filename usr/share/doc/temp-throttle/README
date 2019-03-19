@@ -1,4 +1,4 @@
-temp-throttle
+temp_throttle
 =============
 
 Linux shell script for throttling system CPU frequency based on a desired
@@ -16,7 +16,7 @@ This script must be run with root or sudo privileges. Only Celsius temperatures
 are supported. The configuration file is expected to be at
 /etc/temp_throttle.conf
 
-    sudo ./temp-throttle
+    sudo ./temp_throttle
 
 (Giving the temperature as a command argument is no longer supported.)
 
@@ -31,5 +31,5 @@ Links: http://seperohacker.blogspot.com/2012/10/linux-keep-your-cpu-cool-with-fr
 
 License: GNU GPL 2.0
 
-Usage: `temp-throttle max_temp`
+Usage: `temp_throttle [config_file]`
 USES CELSIUS TEMPERATURES  
