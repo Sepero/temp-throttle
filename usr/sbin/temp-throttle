@@ -5,10 +5,11 @@
 # version 3.00
 
 # Set log file /var/log/...
-# Get credits..
 # Change - to _
 # Fix all dates and copyrights.
 # Edit blog to reflect changes.
+# Update systemd file.
+# Correct config file.
 
 cat << EOF
 Author: Sepero 2012- (sepero 111 @ gmx . com)
