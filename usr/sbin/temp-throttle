@@ -26,7 +26,7 @@ EOF
 
 # Try to return everything to normal before exiting.
 norm_exit () {
-	for((i=0;i<50;i++)) { unthrottle () }
+	for((i=0;i<10;i++)) { unthrottle }
 	exit
 }
 trap norm_exit EXIT SIGINT SIGTERM
