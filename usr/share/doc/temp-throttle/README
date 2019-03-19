@@ -13,10 +13,12 @@ maximum desired.)
 
 
 This script must be run with root or sudo privileges. Only Celsius temperatures
-are supported. This example will limit system temperatures to 80 Celsius:
+are supported. The configuration file is expected to be at
+/etc/temp_throttle.conf
 
-    sudo ./temp-throttle 80
+    sudo ./temp-throttle
 
+(Giving the temperature as a command argument is no longer supported.)
 
 For more instructions, see here:
 http://seperohacker.blogspot.com/2012/10/linux-keep-your-cpu-cool-with-frequency.html
