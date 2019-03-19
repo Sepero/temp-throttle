@@ -2,8 +2,8 @@
 Description=Throttle system CPU frequency based on a maximum temperature
 
 [Service]
-ExecStart=/usr/sbin/temp_throttle
-#ExecStart=/usr/sbin/temp_throttle %i # Optional arguement, config file.
+ExecStart=/usr/sbin/temp-throttle
+#ExecStart=/usr/sbin/temp-throttle %i # Optional arguement, config file.
 Type=simple
 
 [Install]
