@@ -10,3 +10,4 @@ Neraste (github.com) - ARM Architecture patch for backwards reported frequencies
 Glutanimate (github.com) - Catch script exit and reset CPU to maximum frequency.
 martin-schmidt (github.com) - Configuration file and init.d startup support.
 Piotr Findeisen (github.com/findepi) - Many valuable edits Dec 19, 2015.
+Marc Cousin (github.com/marco44) - Sorting frequencies for ARM machines.
