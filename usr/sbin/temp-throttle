@@ -5,10 +5,9 @@
 # version 3.00
 
 # Set log file /var/log/...
-# Change - to _
 # Edit blog to reflect changes.
 # Mod brackets [[
-
+# Create logging.
 
 cat << EOF
 Author: Sepero 2012- (sepero 111 @ gmx . com)
