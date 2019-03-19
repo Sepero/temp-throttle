@@ -6,10 +6,9 @@
 
 # Set log file /var/log/...
 # Change - to _
-# Fix all dates and copyrights.
 # Edit blog to reflect changes.
-# Update systemd file.
-# Correct config file.
+# Mod brackets [[
+
 
 cat << EOF
 Author: Sepero 2012- (sepero 111 @ gmx . com)
