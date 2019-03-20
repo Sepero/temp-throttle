@@ -17,7 +17,7 @@ echo "$INFO"
 
 # Try to return frequency to max before exiting.
 norm_exit () {
-	for((i=0;i<50;i++)); do
+	for((i=0; i < 50; i++)); do
 		[[ CURRENT_FREQ -eq 1 ]] && break
 		unthrottle 2> /dev/null
 	done
