@@ -58,6 +58,7 @@ CONFIG_TEMPERATURE_FILE="$(echo "$CONFIG" | sed -n '$s/TEMPERATURE_FILE=//ip')"
 # Set log file.
 [[ -n $LOG_FILE ]] ||
 LOG_FILE="/var/log/temp-throttle.log"
+exec 1<>$LOG_FILE; exec 2>&1 # Begin redirecting output to log.
 
 # Verify max temperature was set.
 [[ -n $MAX_TEMP ]] ||
