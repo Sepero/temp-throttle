@@ -4,9 +4,9 @@
 # USE CELSIUS TEMPERATURES.
 # version 3.00
 
-# Set log file /var/log/...
 # Edit blog to reflect changes.
 # Create logging.
+# Set log file /var/log/...
 
 cat << EOF
 Author: Sepero 2012- (sepero 111 @ gmx . com)
@@ -35,7 +35,7 @@ err_exit () {
 	exit 128
 }
 
-### START Get configuration arguments.
+### START Get Configuration Arguments.
 
 CONFIG_FILE="/etc/temp-throttle.conf"
 
@@ -55,6 +55,10 @@ LOG_FILE="$(echo "$CONFIG" | sed -n '$s/LOG_FILE=//ip')"
 MAX_TEMP="$(echo "$CONFIG" | sed -n '$s/MAX_TEMP=//ip')"
 CONFIG_TEMPERATURE_FILE="$(echo "$CONFIG" | sed -n '$s/TEMPERATURE_FILE=//ip')"
 
+# Set log file.
+[[ -n $LOG_FILE ]] ||
+LOG_FILE="/var/log/temp-throttle.log"
+
 # Verify max temperature was set.
 [[ -n $MAX_TEMP ]] ||
 err_exit "MAX_TEMP missing from configuration file $CONFIG_FILE. Please supply the maximum desired temperature in Celsius."
@@ -64,7 +68,7 @@ echo "Maximum temperature set to: ${MAX_TEMP}C"
 [[ $MAX_TEMP =~ ^-?[0-9]+$ ]] ||
 err_exit "Maximum temperature $MAX_TEMP must be an integer."
 
-### END Get configuration arguments.
+### END Get Configuration Arguments.
 
 
 ### START Initialize Global Variables.
