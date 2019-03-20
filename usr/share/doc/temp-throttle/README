@@ -18,7 +18,8 @@ are supported. The configuration file is expected to be at
 
     sudo ./temp-throttle
 
-(Giving the temperature as a command argument is no longer supported.)
+(Giving the temperature as a command argument is no longer supported. The only 
+allowed argument is an alternate configuration file.)
 
 For more instructions, see here:
 http://seperohacker.blogspot.com/2012/10/linux-keep-your-cpu-cool-with-frequency.html
@@ -32,4 +33,3 @@ Links: http://seperohacker.blogspot.com/2012/10/linux-keep-your-cpu-cool-with-fr
 License: GNU GPL 2.0
 
 Usage: `temp-throttle [config-file]`
-USES CELSIUS TEMPERATURES  
