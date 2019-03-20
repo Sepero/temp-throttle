@@ -174,7 +174,7 @@ CURRENT_FREQ=2
 echo "Initialize to max CPU frequency"
 unthrottle  # Will unthrottle CURRENT_FREQ to 1. Max Frequency.
 
-# START Main loop
+# START Main Loop.
 while true; do
 	get_temp # Gets the current temperature and set it to the variable TEMP.
 	if   [[ $TEMP -gt $MAX_TEMP ]]; then # Throttle if too hot.
