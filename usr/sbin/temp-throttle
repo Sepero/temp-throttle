@@ -5,21 +5,24 @@
 
 # Edit blog to reflect changes.
 
-cat << EOF
-Author: Sepero 2012- (sepero 111 @ gmx . com)
+INFO="Author: Sepero 2012- (sepero 111 @ gmx . com)
 URL: http://github.com/Sepero/temp-throttle/
 
-EOF
+"
+echo "$INFO"
 
 # Additional Links
 # http://seperohacker.blogspot.com/2012/10/linux-keep-your-cpu-cool-with-frequency.html
 
 # License: GNU GPL 2.0
-set -x
+#set -x
 
 # Try to return frequency to max before exiting.
 norm_exit () {
-	for((i=0;i<10;i++)); do [[ CURRENT_FREQ -eq 1 ]] && break; unthrottle; done
+	for((i=0;i<50;i++)); do
+		[[ CURRENT_FREQ -eq 1 ]] && break
+		unthrottle 2> /dev/null
+	done
 	exit
 }
 trap norm_exit EXIT SIGINT SIGTERM
@@ -50,7 +53,7 @@ MAX_TEMP="$(echo "$CONFIG" | sed -n 's/MAX_TEMP=//ip')"
 CONFIG_TEMPERATURE_FILE="$(echo "$CONFIG" | sed -n '$s/TEMPERATURE_FILE=//ip')"
 
 # Begin redirecting output to log.
-[[ -n $LOG_FILE ]] || exec 1<>$LOG_FILE; exec 2>&1
+[[ -n $LOG_FILE ]] && { exec 1> "$LOG_FILE"; exec 2>&1; echo "$INFO"; }
 
 # Verify max temperature was set.
 [[ -n $MAX_TEMP ]] ||
@@ -147,7 +150,7 @@ set_freq () {
 throttle () {
 	if [[ $CURRENT_FREQ -lt $FREQ_LIST_LEN ]]; then
 		CURRENT_FREQ=$((CURRENT_FREQ + 1))
-		echo -n "throttle "
+		echo -n "$(date "+%Y-%m-%d %H:%M:%S")   throttle "
 		set_freq $CURRENT_FREQ
 	fi
 }
@@ -156,7 +159,7 @@ throttle () {
 unthrottle () {
 	if [[ $CURRENT_FREQ -ne 1 ]]; then
 		CURRENT_FREQ=$((CURRENT_FREQ - 1))
-		echo -n "unthrottle "
+		echo -n "$(date "+%Y-%m-%d %H:%M:%S") unthrottle "
 		set_freq $CURRENT_FREQ
 	fi
 }
