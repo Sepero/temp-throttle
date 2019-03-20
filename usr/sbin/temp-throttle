@@ -6,7 +6,6 @@
 
 # Set log file /var/log/...
 # Edit blog to reflect changes.
-# Mod brackets [[
 # Create logging.
 
 cat << EOF
@@ -57,7 +56,7 @@ MAX_TEMP="$(echo "$CONFIG" | sed -n '$s/MAX_TEMP=//ip')"
 CONFIG_TEMPERATURE_FILE="$(echo "$CONFIG" | sed -n '$s/TEMPERATURE_FILE=//ip')"
 
 # Verify max temperature was set.
-[[ $MAX_TEMP != "" ]] ||
+[[ -n $MAX_TEMP ]] ||
 err_exit "MAX_TEMP missing from configuration file $CONFIG_FILE. Please supply the maximum desired temperature in Celsius."
 echo "Maximum temperature set to: ${MAX_TEMP}C"
 
@@ -116,7 +115,7 @@ null
 "
 
 # If temperature file from temp-throttle.conf is set, then we force using that.
-[[ $CONFIG_TEMPERATURE_FILE != "" ]] && TEMPERATURE_FILES="$CONFIG_TEMPERATURE_FILE"
+[[ -n $CONFIG_TEMPERATURE_FILE ]] && TEMPERATURE_FILES="$CONFIG_TEMPERATURE_FILE"
 
 # Verify that we have at least one existing temperature file.
 for file in $TEMPERATURE_FILES; do
