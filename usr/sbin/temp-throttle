@@ -3,8 +3,6 @@
 # Usage: temp-throttle [config_file]
 # version 3.00
 
-# Edit blog to reflect changes.
-
 INFO="Author: Sepero 2012- (sepero 111 @ gmx . com)
 URL: http://github.com/Sepero/temp-throttle/
 
