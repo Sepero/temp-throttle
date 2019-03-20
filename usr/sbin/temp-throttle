@@ -1,12 +1,9 @@
 #!/usr/bin/env bash
 
-# Usage: temp-throttle max_temp
-# USE CELSIUS TEMPERATURES.
+# Usage: temp-throttle [config_file]
 # version 3.00
 
 # Edit blog to reflect changes.
-# Create logging.
-# Set log file /var/log/...
 
 cat << EOF
 Author: Sepero 2012- (sepero 111 @ gmx . com)
@@ -18,12 +15,11 @@ EOF
 # http://seperohacker.blogspot.com/2012/10/linux-keep-your-cpu-cool-with-frequency.html
 
 # License: GNU GPL 2.0
+set -x
 
-# set -x
-
-# Try to return everything to normal before exiting.
+# Try to return frequency to max before exiting.
 norm_exit () {
-	for((i=0;i<10;i++)) { unthrottle }
+	for((i=0;i<10;i++)); do [[ CURRENT_FREQ -eq 1 ]] && break; unthrottle; done
 	exit
 }
 trap norm_exit EXIT SIGINT SIGTERM
@@ -37,28 +33,24 @@ err_exit () {
 
 ### START Get Configuration Arguments.
 
+LOG_FILE="/var/log/temp-throttle.log"
 CONFIG_FILE="/etc/temp-throttle.conf"
 
 # One Optional Arguement = alternate config file location.
-if [[ -n $1 ]]; then {
-	CONFIG_FILE="$1"
-}
+[[ -n "$1" ]] && CONFIG_FILE="$1"
 
 # Parse the configuration file. Strip comments. Trim whitespace. Remove whitespace around "="
 CONFIG="$(cat $CONFIG_FILE   |
-	sed 's/[#;].*$//'        |  
-	xargs                    |  
-	sed 's/\s*=\s*/=/')" || \
+	sed 's/[#;].*$//'        |
+	tr -d '[:blank:]')"      || \
 err_exit "Reading configuration file: $CONFIG_FILE"
 
-LOG_FILE="$(echo "$CONFIG" | sed -n '$s/LOG_FILE=//ip')"
-MAX_TEMP="$(echo "$CONFIG" | sed -n '$s/MAX_TEMP=//ip')"
+LOG_FILE="$(echo "$CONFIG" | sed -n 's/LOG_FILE=//ip')"
+MAX_TEMP="$(echo "$CONFIG" | sed -n 's/MAX_TEMP=//ip')"
 CONFIG_TEMPERATURE_FILE="$(echo "$CONFIG" | sed -n '$s/TEMPERATURE_FILE=//ip')"
 
-# Set log file.
-[[ -n $LOG_FILE ]] ||
-LOG_FILE="/var/log/temp-throttle.log"
-exec 1<>$LOG_FILE; exec 2>&1 # Begin redirecting output to log.
+# Begin redirecting output to log.
+[[ -n $LOG_FILE ]] || exec 1<>$LOG_FILE; exec 2>&1
 
 # Verify max temperature was set.
 [[ -n $MAX_TEMP ]] ||
