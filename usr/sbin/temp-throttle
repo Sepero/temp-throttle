@@ -41,28 +41,28 @@ err_exit () {
 CONFIG_FILE="/etc/temp-throttle.conf"
 
 # One Optional Arguement = alternate config file location.
-if [[ -n "$1" ]]; then {
+if [[ -n $1 ]]; then {
 	CONFIG_FILE="$1"
 }
 
-# Parse the configuration file.
+# Parse the configuration file. Strip comments. Trim whitespace. Remove whitespace around "="
 CONFIG="$(cat $CONFIG_FILE   |
-	sed 's/[#;].*$//'        |  # Strip comments.
-	xargs                    |  # Trim whitespace.
-	sed 's/\s*=\s*/=/')"        # Remove whitespace around "="
-	
-	LOG_FILE="$(echo "$CONFIG" | sed -n '$s/LOG_FILE=//ip')"
-	MAX_TEMP="$(echo "$CONFIG" | sed -n '$s/MAX_TEMP=//ip')"
-	CONFIG_TEMPERATURE_FILE="$(echo "$CONFIG" | sed -n '$s/TEMPERATURE_FILE=//ip')" || \
-	err_exit "Reading configuration file: $CONFIG"
+	sed 's/[#;].*$//'        |  
+	xargs                    |  
+	sed 's/\s*=\s*/=/')" || \
+err_exit "Reading configuration file: $CONFIG_FILE"
+
+LOG_FILE="$(echo "$CONFIG" | sed -n '$s/LOG_FILE=//ip')"
+MAX_TEMP="$(echo "$CONFIG" | sed -n '$s/MAX_TEMP=//ip')"
+CONFIG_TEMPERATURE_FILE="$(echo "$CONFIG" | sed -n '$s/TEMPERATURE_FILE=//ip')"
 
 # Verify max temperature was set.
-[ "$MAX_TEMP" != "" ] ||
+[[ $MAX_TEMP != "" ]] ||
 err_exit "MAX_TEMP missing from configuration file $CONFIG_FILE. Please supply the maximum desired temperature in Celsius."
 echo "Maximum temperature set to: ${MAX_TEMP}C"
 
 # Verify temperature is an integer.
-[[ "$MAX_TEMP" =~ ^-?[0-9]+$ ]] ||
+[[ $MAX_TEMP =~ ^-?[0-9]+$ ]] ||
 err_exit "Maximum temperature $MAX_TEMP must be an integer."
 
 ### END Get configuration arguments.
@@ -116,16 +116,16 @@ null
 "
 
 # If temperature file from temp-throttle.conf is set, then we force using that.
-[ "$CONFIG_TEMPERATURE_FILE" != "" ] && TEMPERATURE_FILES="$CONFIG_TEMPERATURE_FILE"
+[[ $CONFIG_TEMPERATURE_FILE != "" ]] && TEMPERATURE_FILES="$CONFIG_TEMPERATURE_FILE"
 
 # Verify that we have at least one existing temperature file.
 for file in $TEMPERATURE_FILES; do
 	TEMP_FILE=$file
-	[ -f $TEMP_FILE ] && break
+	[[ -f $TEMP_FILE ]] && break
 done
 
 # If no temperature files exist, exit with error.
-[ "$TEMP_FILE" == "null" ] && err_exit "A location for temperature reading was not found.\nPlease reference bug #7: https://github.com/Sepero/temp-throttle/issues/7"
+[[ $TEMP_FILE == "null" ]] && err_exit "A location for temperature reading was not found.\nPlease reference bug #7: https://github.com/Sepero/temp-throttle/issues/7"
 
 ### END Initialize Global Variables.
 
@@ -149,7 +149,7 @@ set_freq () {
 
 # Will reduce the frequency of cpus if possible.
 throttle () {
-	if [ $CURRENT_FREQ -lt $FREQ_LIST_LEN ]; then
+	if [[ $CURRENT_FREQ -lt $FREQ_LIST_LEN ]]; then
 		CURRENT_FREQ=$((CURRENT_FREQ + 1))
 		echo -n "throttle "
 		set_freq $CURRENT_FREQ
@@ -158,7 +158,7 @@ throttle () {
 
 # Will increase the frequency of cpus if possible.
 unthrottle () {
-	if [ $CURRENT_FREQ -ne 1 ]; then
+	if [[ $CURRENT_FREQ -ne 1 ]]; then
 		CURRENT_FREQ=$((CURRENT_FREQ - 1))
 		echo -n "unthrottle "
 		set_freq $CURRENT_FREQ
@@ -180,9 +180,9 @@ unthrottle  # Will unthrottle CURRENT_FREQ to 1. Max Frequency.
 # START Main loop
 while true; do
 	get_temp # Gets the current temperature and set it to the variable TEMP.
-	if   [ $TEMP -gt $MAX_TEMP ]; then # Throttle if too hot.
+	if   [[ $TEMP -gt $MAX_TEMP ]]; then # Throttle if too hot.
 		throttle
-	elif [ $TEMP -le $LOW_TEMP ]; then # Unthrottle if cool.
+	elif [[ $TEMP -le $LOW_TEMP ]]; then # Unthrottle if cool.
 		unthrottle
 	fi
 	sleep 3 # The amount of time between checking temperatures.
