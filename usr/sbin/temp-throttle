@@ -39,6 +39,7 @@ CONFIG_FILE="/etc/temp-throttle.conf"
 
 # One Optional Arguement = alternate config file location.
 [[ -n "$1" ]] && CONFIG_FILE="$1"
+[[ -e "$CONFIG_FILE" ]] || err_exit "Config file \"$CONFIG_FILE\" does not exist."
 
 # Parse the configuration file. Strip comments. Trim whitespace. Remove whitespace around "="
 CONFIG="$(cat $CONFIG_FILE   |
