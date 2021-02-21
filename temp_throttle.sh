@@ -102,7 +102,7 @@ done
 set_freq () {
 	# From the string FREQ_LIST, we choose the item at index CURRENT_FREQ.
 	FREQ_TO_SET=$(echo $FREQ_LIST | cut -d " " -f $CURRENT_FREQ)
-	echo $FREQ_TO_SET
+	echo -n $[FREQ_TO_SET/1000] "MHz"
 	for i in $(seq 0 $CORES); do
 		# Try to set core frequency by writing to /sys/devices.
 		{ echo $FREQ_TO_SET 2> /dev/null > /sys/devices/system/cpu/cpu$i/cpufreq/scaling_max_freq; } ||
@@ -140,7 +140,9 @@ get_temp () {
 ### END define script functions.
 
 echo "Initialize to max CPU frequency"
+get_temp
 unthrottle
+echo " (Initial Temp:" $[TEMP/1000] "deg C)"
 
 
 # Main loop
@@ -148,8 +150,10 @@ while true; do
 	get_temp # Gets the current temperature and set it to the variable TEMP.
 	if   [ $TEMP -gt $MAX_TEMP ]; then # Throttle if too hot.
 		throttle
-	elif [ $TEMP -le $LOW_TEMP ]; then # Unthrottle if cool.
+		echo " (High:" $[TEMP/1000] "deg C)"
+	elif [ $TEMP -le $LOW_TEMP ] && [ $CURRENT_FREQ -ne 1 ]; then # Unthrottle if cool.
 		unthrottle
+		echo " (Low:" $[TEMP/1000] "deg C)"
 	fi
 	sleep 3 # The amount of time between checking temperatures.
 done
