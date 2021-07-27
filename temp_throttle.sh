@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Usage: temp_throttle.sh max_temp
+# Usage: temp_throttle.sh max_temp [check_interval]
 # USE CELSIUS TEMPERATURES.
 # version 2.21
 
@@ -15,6 +15,7 @@ EOF
 
 # Additional Credits
 # Wolfgang Ocker <weo AT weo1 DOT de> - Patch for unspecified cpu frequencies.
+# Stefan Ossenbrink <lipownski AT googlemail DOT com> - Optional check interval
 
 # License: GNU GPL 2.0
 
@@ -25,7 +26,7 @@ err_exit () {
 	exit 128
 }
 
-if [ $# -ne 1 ]; then
+if [ $# -lt 1 ]; then
 	# If temperature wasn't given, then print a message and exit.
 	echo "Please supply a maximum desired temperature in Celsius." 1>&2
 	echo "For example:  ${0} 60" 1>&2
@@ -33,6 +34,13 @@ if [ $# -ne 1 ]; then
 else
 	#Set the first argument as the maximum desired temperature.
 	MAX_TEMP=$1
+fi
+
+if [ $# -ge 2 ]; then
+	# Optinal sleep interval, default 3 seconds
+	CHECK_INTERVAL=$2
+else
+	CHECK_INTERVAL=3
 fi
 
 
@@ -151,5 +159,5 @@ while true; do
 	elif [ $TEMP -le $LOW_TEMP ]; then # Unthrottle if cool.
 		unthrottle
 	fi
-	sleep 3 # The amount of time between checking temperatures.
+	sleep $CHECK_INTERVAL # The amount of time between checking temperatures.
 done
