@@ -2,7 +2,7 @@
 
 # Usage: temp_throttle.sh max_temp
 # USE CELSIUS TEMPERATURES.
-# version 2.21
+# version 2.22
 
 cat << EOF
 Author: Sepero 2016 (sepero 111 @ gmx . com)
@@ -35,6 +35,8 @@ else
 	MAX_TEMP=$1
 fi
 
+
+echo "Starting up:" $(date --iso-8601=seconds)
 
 ### START Initialize Global variables.
 
@@ -117,8 +119,12 @@ set_freq () {
 throttle () {
 	if [ $CURRENT_FREQ -lt $FREQ_LIST_LEN ]; then
 		CURRENT_FREQ=$((CURRENT_FREQ + 1))
-		echo -n "throttle "
+		echo -n $(date --iso-8601=seconds) "throttle "
 		set_freq $CURRENT_FREQ
+	else
+		echo -n $(date --iso-8601=seconds) "already fully throttled "
+		FREQ_TO_SET=$(echo $FREQ_LIST | cut -d " " -f $CURRENT_FREQ)
+		echo -n $[FREQ_TO_SET/1000] "MHz"
 	fi
 }
 
@@ -126,7 +132,7 @@ throttle () {
 unthrottle () {
 	if [ $CURRENT_FREQ -ne 1 ]; then
 		CURRENT_FREQ=$((CURRENT_FREQ - 1))
-		echo -n "unthrottle "
+		echo -n $(date --iso-8601=seconds) "unthrottle "
 		set_freq $CURRENT_FREQ
 	fi
 }
