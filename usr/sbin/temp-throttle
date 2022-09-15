@@ -188,3 +188,36 @@ while true; do
 	fi
 	sleep 3 # The amount of time between checking temperatures.
 done
+
+
+# Upcoming modifications for parsing config file.
+
+#typeset -A config # init array
+#config=( # set default values in config array
+#    [username]="root"
+#    [password]=""
+#    [hostname]="localhost"
+#)
+#
+#while read line
+#do
+#    if echo $line | grep -F = &>/dev/null
+#    then
+#        varname=$(echo "$line" | cut -d '=' -f 1)
+#        config[$varname]=$(echo "$line" | cut -d '=' -f 2-)
+#    fi
+#done < myscript.conf
+#
+#declare -A config
+#while IFS=$'[ \t]*=[ \t]*' read -r name value
+#do
+#    echo "Read name=$name, value=$value" >&2
+#    config[$name]="$value"
+#done
+#
+#echo "${config[$name]}"
+
+# Logging date/time https://github.com/Sepero/temp-throttle/pull/37/commits/b384606c481661d4240b6a4ff6d75d33d0d4f286
+# Log Freq and Temp in Si units https://github.com/Sepero/temp-throttle/pull/37/commits/cd571ac00a3b73559f3608cdbed9d31dde9a1399
+# Implement Upthrottle difference as config variable.
+# Frequency step multiplier, to correct faster on systems with many steps.
