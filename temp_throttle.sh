@@ -70,18 +70,25 @@ FREQ_LIST_LEN=$(echo $FREQ_LIST | wc -w)
 CURRENT_FREQ=2
 
 # This is a list of possible locations to read the current system temperature.
-TEMPERATURE_FILES="
-/sys/class/thermal/thermal_zone0/temp
-/sys/class/thermal/thermal_zone1/temp
-/sys/class/thermal/thermal_zone2/temp
-/sys/class/hwmon/hwmon0/temp1_input
-/sys/class/hwmon/hwmon1/temp1_input
-/sys/class/hwmon/hwmon2/temp1_input
-/sys/class/hwmon/hwmon0/device/temp1_input
-/sys/class/hwmon/hwmon1/device/temp1_input
-/sys/class/hwmon/hwmon2/device/temp1_input
-null
-"
+for THERMAL in $(ls /sys/class/thermal/ | grep -E '(thermal_zone[0-9])')
+do
+	THERMAL_DIR="/sys/class/thermal/${THERMAL}"
+	echo "Found cpu: \"${THERMAL_DIR}\" ..."
+	THERMAL_TYPE_FILE="${THERMAL_DIR}/type"
+	if [ -f "${THERMAL_TYPE_FILE}" ]; then
+		TYPE=$(cat "${THERMAL_TYPE_FILE}" | grep 'cpu-thermal') # cpu-thermal can be found in thermal_zone([0-9])/type, it's different for each SoC
+		if [ "${TYPE}" == "cpu-thermal" ]; then
+			TEMP="${THERMAL_DIR}/temp"
+                        echo -e "\tFound CPU thermal, temperature $(cat "${TEMP}") degrees"
+			TEMPERATURE_FILES="
+			${TEMP}
+			null
+			"
+                else
+			echo -e "\tNot found..."
+		fi
+	fi
+done
 
 # Store the first temperature location that exists in the variable TEMP_FILE.
 # The location stored in $TEMP_FILE will be used for temperature readings.
