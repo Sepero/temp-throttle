@@ -8,7 +8,7 @@ Set a maximum temperature for your system using this script. If the maximum temp
 
 This script must be run with root or sudo privileges. Only Celsius temperatures are supported. This example will limit system temperatures to 80 Celsius:
 
-    sudo ./temp_throttle.sh --max-temp=80 --max-freq=mhz
+    sudo ./temp_throttle.sh --max-temp=80 --max-freq=auto
 
 
 For more instructions, see here:  
