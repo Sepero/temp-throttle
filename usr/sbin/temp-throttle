@@ -3,7 +3,7 @@
 # Usage: temp-throttle # No arguments will default read from /etc/temp-throttle.conf
 # Usage: temp-throttle [-t MAX_TEMP] [-c CONFIG_FILE] [-k CORE] [-f TEMP_FILE] [-i INTERVAL] [-l LOG_FILE]
 
-VERSION="3.02"
+VERSION="3.03"
 
 cat << EOF
 Author: Sepero 2012- sepero 111 @ gmx . com
@@ -219,7 +219,7 @@ while true; do
 	elif [[ $TEMP -le $LOW_TEMP && $CURRENT_FREQ -ne 1 ]]; then
 	  # Unthrottle if cool.
 		unthrottle
-		sleep 0.5 # Fast react when temperature cooling.
+		sleep 0.5; continue # Fast react when temperature cooling.
 	fi
 	# Sleep wait between checking temperatures.
 	sleep $INTERVAL || err_exit "Sleep wait INTERVAL must be an integer or float value: $INTERVAL"
